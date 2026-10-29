@@ -19,6 +19,9 @@ import HRDashboard from './pages/hr/HRDashboard';
 import VacancyList from './pages/hr/vacancies/VacancyList';
 import VacancyEditor from './pages/hr/vacancies/VacancyEditor';
 import CandidateDashboard from './pages/candidate/CandidateDashboard';
+import Vacancies from './pages/candidate/Vacancies';
+import VacancyDetail from './pages/candidate/VacancyDetail';
+import Profile from './pages/candidate/Profile';
 import InterviewerHome from './pages/interviewer/InterviewerHome';
 import ComingSoon from './pages/ComingSoon';
 import NotFound from './pages/NotFound';
@@ -60,9 +63,11 @@ export default function App() {
       <Route element={<ProtectedRoute roles={[ROLES.CANDIDATE]} />}>
         <Route path="/candidate" element={<CandidateLayout />}>
           <Route index element={<CandidateDashboard />} />
-          <Route path="vacancies" element={<ComingSoon title="Vacancies" />} />
-          <Route path="applications" element={<ComingSoon title="My Applications" />} />
-          <Route path="profile" element={<ComingSoon title="Profile" />} />
+         <Route path="vacancies" element={<Vacancies />} />
+<Route path="vacancies/:id" element={<VacancyDetail />} />
+<Route path="vacancies/:id/apply" element={<ComingSoon title="Apply" />} />
+<Route path="applications" element={<ComingSoon title="My Applications" />} />
+<Route path="profile" element={<Profile />} />
         </Route>
       </Route>
 

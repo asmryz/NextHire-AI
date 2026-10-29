@@ -7,21 +7,28 @@ const { testConnection } = require('./config/db');
 
 const app = express();
 
-app.use(cors({ origin: process.env.FRONTEND_URL || 'http://localhost:5173' }));
+// Allowed frontend addresses (trailing "/" removed; both Vite ports allowed in development)
+const allowedOrigins = [
+  (process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/+$/, ''),
+  'http://localhost:5173',
+  'http://localhost:5174',
+  'http://127.0.0.1:5173',
+];
+app.use(cors({ origin: allowedOrigins }));
 app.use(express.json({ limit: '1mb' }));
 
-// ---- Routes ----------------------------------------------------------
+// ---- Routes (one line each) ------------------------------------------
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
-app.use('/api/auth', require('./routes/auth.routes'));
+app.use('/api/auth', require('./routes/auth.routes'));               // Aarian
+app.use('/api/vacancies', require('./routes/vacancy.routes'));       // Aarian
+app.use('/api/departments', require('./routes/department.routes'));  // Shivani
+app.use('/api/candidate', require('./routes/candidate.routes'));     // Shivani
 
-
-app.use('/api/departments', require('./routes/department.routes'));
-app.use('/api/vacancies', require('./routes/vacancy.routes'));
-
- app.use('/api/departments', require('./routes/department.routes'));
 // ---- Unknown route ---------------------------------------------------
 app.use((req, res) => res.status(404).json({ message: 'Route not found.' }));
 
+// ---- Error handler (anything not caught in a controller) -------------
+// eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
   console.error(err);
   res.status(500).json({ message: 'System temporarily unavailable. Please try again later.' });
