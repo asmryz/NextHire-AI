@@ -14,13 +14,11 @@ app.use(express.json({ limit: '1mb' }));
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 app.use('/api/auth', require('./routes/auth.routes'));
 // Shivani: uncomment the next line after adding routes/department.routes.js
-<<<<<<< HEAD
+
 // app.use('/api/departments', require('./routes/department.routes'));
 app.use('/api/vacancies', require('./routes/vacancy.routes'));
-=======
- app.use('/api/departments', require('./routes/department.routes'));
->>>>>>> aefd916c3ee3b6cb8a7c9fbce772f741915786da
 
+ app.use('/api/departments', require('./routes/department.routes'));
 // ---- Unknown route ---------------------------------------------------
 app.use((req, res) => res.status(404).json({ message: 'Route not found.' }));
 
