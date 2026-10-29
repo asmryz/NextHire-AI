@@ -15,6 +15,7 @@ app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 app.use('/api/auth', require('./routes/auth.routes'));
 // Shivani: uncomment the next line after adding routes/department.routes.js
 // app.use('/api/departments', require('./routes/department.routes'));
+app.use('/api/vacancies', require('./routes/vacancy.routes'));
 
 // ---- Unknown route ---------------------------------------------------
 app.use((req, res) => res.status(404).json({ message: 'Route not found.' }));
