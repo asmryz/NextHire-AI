@@ -1,0 +1,37 @@
+/* frontend/src/index.css
+   Owner: Aarian
+   THE ONLY PLACE where colours and fonts are defined.
+   Use them as Tailwind classes: bg-cream, text-brown, bg-amber, text-rust,
+   border-line, font-heading ... Never write hex colours inside pages. */
+@import "tailwindcss";
+
+@theme {
+  /* Brand */
+  --color-cream: #F9E6A8;        /* light background, soft cards */
+  --color-amber: #F2A900;        /* buttons, highlights, active nav */
+  --color-amber-dark: #D99700;   /* button hover */
+  --color-rust: #CC6F00;         /* charts, progress, icons */
+  --color-brown: #4D2A00;        /* sidebar, headings, text */
+
+  /* Supporting shades */
+  --color-paper: #FFFBEF;        /* page background */
+  --color-cream-soft: #FFF6DA;   /* notices */
+  --color-line: #F3DC99;         /* card borders */
+  --color-line-strong: #E8C877;  /* input borders */
+  --color-muted: #7A4A12;        /* secondary text */
+  --color-brown-light: #6B3F0A;  /* sidebar dividers */
+  --color-danger: #A61B1B;
+  --color-danger-soft: #F6DADA;
+  --color-success: #1E5B1E;
+  --color-success-soft: #E3F2DF;
+
+  /* Fonts */
+  --font-sans: "Poppins", system-ui, sans-serif;
+  --font-heading: "Plus Jakarta Sans", system-ui, sans-serif;
+}
+
+@layer base {
+  html { font-family: var(--font-sans); color: var(--color-brown); background: var(--color-paper); }
+  h1, h2, h3, h4 { font-family: var(--font-heading); }
+  :focus-visible { outline: 3px solid var(--color-rust); outline-offset: 2px; }
+}
