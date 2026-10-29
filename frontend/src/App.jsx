@@ -18,6 +18,8 @@ import ResetPassword from './pages/auth/ResetPassword';
 import HRDashboard from './pages/hr/HRDashboard';
 import VacancyList from './pages/hr/vacancies/VacancyList';
 import VacancyEditor from './pages/hr/vacancies/VacancyEditor';
+import InterviewerList from './pages/hr/interviewers/InterviewerList';
+import InterviewerDetail from './pages/hr/interviewers/InterviewerDetail';
 import CandidateDashboard from './pages/candidate/CandidateDashboard';
 import Vacancies from './pages/candidate/Vacancies';
 import VacancyDetail from './pages/candidate/VacancyDetail';
@@ -53,7 +55,8 @@ export default function App() {
           <Route path="vacancies" element={<VacancyList />} />
           <Route path="vacancies/new" element={<VacancyEditor />} />
           <Route path="vacancies/:id" element={<VacancyEditor />} />
-          <Route path="interviewers" element={<ComingSoon title="Interviewers" />} />
+          <Route path="interviewers" element={<InterviewerList />} />
+<Route path="interviewers/:id" element={<InterviewerDetail />} />
           {/* Shivani */}
           <Route path="inbox" element={<ComingSoon title="Application Inbox" />} />
         </Route>
