@@ -24,6 +24,7 @@ app.use('/api/vacancies', require('./routes/vacancy.routes'));       // Aarian
 app.use('/api/departments', require('./routes/department.routes'));  // Shivani
 app.use('/api/candidate', require('./routes/candidate.routes'));     // Shivani
 app.use('/api/interviewers', require('./routes/interviewer.routes'));  // Aarian
+app.use('/api/inbox', require('./routes/inbox.routes'));              // Shivani
 
 // ---- Unknown route ---------------------------------------------------
 app.use((req, res) => res.status(404).json({ message: 'Route not found.' }));

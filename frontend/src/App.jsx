@@ -20,12 +20,16 @@ import VacancyList from './pages/hr/vacancies/VacancyList';
 import VacancyEditor from './pages/hr/vacancies/VacancyEditor';
 import InterviewerList from './pages/hr/interviewers/InterviewerList';
 import InterviewerDetail from './pages/hr/interviewers/InterviewerDetail';
+import Inbox from './pages/hr/inbox/Inbox';
+import ApplicationView from './pages/hr/inbox/ApplicationView';
 import CandidateDashboard from './pages/candidate/CandidateDashboard';
 import Vacancies from './pages/candidate/Vacancies';
 import VacancyDetail from './pages/candidate/VacancyDetail';
 import Profile from './pages/candidate/Profile';
+import Apply from './pages/candidate/Apply';
+import MyApplications from './pages/candidate/MyApplications';
+import ApplicationDetail from './pages/candidate/ApplicationDetail';
 import InterviewerHome from './pages/interviewer/InterviewerHome';
-import ComingSoon from './pages/ComingSoon';
 import NotFound from './pages/NotFound';
 
 function Home() {
@@ -56,9 +60,10 @@ export default function App() {
           <Route path="vacancies/new" element={<VacancyEditor />} />
           <Route path="vacancies/:id" element={<VacancyEditor />} />
           <Route path="interviewers" element={<InterviewerList />} />
-<Route path="interviewers/:id" element={<InterviewerDetail />} />
+          <Route path="interviewers/:id" element={<InterviewerDetail />} />
           {/* Shivani */}
-          <Route path="inbox" element={<ComingSoon title="Application Inbox" />} />
+          <Route path="inbox" element={<Inbox />} />
+          <Route path="inbox/:id" element={<ApplicationView />} />
         </Route>
       </Route>
 
@@ -66,11 +71,12 @@ export default function App() {
       <Route element={<ProtectedRoute roles={[ROLES.CANDIDATE]} />}>
         <Route path="/candidate" element={<CandidateLayout />}>
           <Route index element={<CandidateDashboard />} />
-         <Route path="vacancies" element={<Vacancies />} />
-<Route path="vacancies/:id" element={<VacancyDetail />} />
-<Route path="vacancies/:id/apply" element={<ComingSoon title="Apply" />} />
-<Route path="applications" element={<ComingSoon title="My Applications" />} />
-<Route path="profile" element={<Profile />} />
+          <Route path="vacancies" element={<Vacancies />} />
+          <Route path="vacancies/:id" element={<VacancyDetail />} />
+          <Route path="vacancies/:id/apply" element={<Apply />} />
+          <Route path="applications" element={<MyApplications />} />
+          <Route path="applications/:id" element={<ApplicationDetail />} />
+          <Route path="profile" element={<Profile />} />
         </Route>
       </Route>
 

@@ -4,6 +4,7 @@
 const express = require('express');
 const multer = require('multer');
 const candidate = require('../controllers/candidate.controller');
+const application = require('../controllers/application.controller');
 const { verifyToken, requireRole } = require('../middleware/auth');
 
 const router = express.Router();
@@ -30,12 +31,19 @@ function pictureUpload(req, res, next) {
   });
 }
 
+// Profile (Part 2)
 router.get('/profile', candidate.getProfile);
 router.put('/profile', candidate.updateProfile);
 router.post('/profile/picture', pictureUpload, candidate.uploadPicture);
 router.delete('/profile/picture', candidate.removePicture);
 
+// Vacancies (Part 2)
 router.get('/vacancies', candidate.listOpenVacancies);
 router.get('/vacancies/:id', candidate.getOpenVacancy);
+
+// Apply + My Applications (Part 3)
+router.post('/vacancies/:id/apply', application.applyToVacancy);
+router.get('/applications', application.listMyApplications);
+router.get('/applications/:id', application.getMyApplication);
 
 module.exports = router;
