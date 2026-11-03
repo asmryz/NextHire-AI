@@ -7,10 +7,10 @@
 //   let HR adjust it, then publish.
 const { pool } = require('../config/db');
 const { logAudit } = require('../utils/audit');
+const { FIELD_TYPES, CHOICE_TYPES, CORE_KEYS, buildForm } = require('../utils/formTemplate');
 
 const UNAVAILABLE = 'Vacancy could not be saved. Please try again.';
 const REQ_TYPES = ['SKILL', 'EXPERIENCE', 'QUALIFICATION', 'CERTIFICATION'];
-const FIELD_TYPES = ['TEXT', 'NUMBER', 'DATE', 'LIST', 'URL'];
 const STATUSES = ['DRAFT', 'OPEN', 'CLOSED', 'FILLED'];
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -56,7 +56,8 @@ async function loadRequirements(db, vacancyId) {
 
 async function loadFormFields(db, vacancyId) {
   const { rows } = await db.query(
-    `SELECT field_id, requirement_id, label, field_type, is_required, display_order
+    `SELECT field_id, requirement_id, field_key, is_standard, section, label, field_type,
+            is_required, options, help_text, display_order
        FROM form_field WHERE vacancy_id = $1 ORDER BY display_order, field_id`,
     [vacancyId]
   );
@@ -134,19 +135,17 @@ async function insertRequirements(client, vacancyId, requirements) {
   }
 }
 
-// Generic Form Mechanism: one structured field per requirement
-function fieldForRequirement(r) {
-  switch (r.req_type) {
-    case 'SKILL':
-      return { label: `${r.name}: list your related skills and tools (comma separated)`, field_type: 'LIST' };
-    case 'EXPERIENCE':
-      return { label: `Years of experience in ${r.name}`, field_type: 'NUMBER' };
-    case 'QUALIFICATION':
-      return { label: `Your qualification relevant to: ${r.name}`, field_type: 'TEXT' };
-    case 'CERTIFICATION':
-      return { label: `${r.name} certification (name and year, or "None")`, field_type: 'TEXT' };
-    default:
-      return { label: r.name, field_type: 'TEXT' };
+// Writes the whole form (array order = display order)
+async function insertFields(client, vacancyId, fields) {
+  let order = 1;
+  for (const f of fields) {
+    await client.query(
+      `INSERT INTO form_field (vacancy_id, requirement_id, field_key, is_standard, section, label,
+                               field_type, is_required, options, help_text, display_order)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+      [vacancyId, f.requirement_id, f.field_key, f.is_standard, f.section, f.label, f.field_type,
+       f.is_required, f.options ? JSON.stringify(f.options) : null, f.help_text, order++]
+    );
   }
 }
 
@@ -347,17 +346,11 @@ async function generateForm(req, res) {
       return res.status(400).json({ message: 'Total weightage must equal 100%' });
     }
 
+    // Standard sections (personal, education, experience, skills) + questions per requirement
+    const fields = buildForm(requirements);
     await client.query('DELETE FROM form_field WHERE vacancy_id = $1', [id]);
-    let order = 1;
-    for (const r of requirements) {
-      const f = fieldForRequirement(r);
-      await client.query(
-        `INSERT INTO form_field (vacancy_id, requirement_id, label, field_type, is_required, display_order)
-         VALUES ($1, $2, $3, $4, $5, $6)`,
-        [id, r.requirement_id, f.label.slice(0, 150), f.field_type, r.is_mandatory, order++]
-      );
-    }
-    await logAudit(client, req.user.user_id, 'vacancy', id, 'GENERATE_FORM', `${requirements.length} fields`);
+    await insertFields(client, id, fields);
+    await logAudit(client, req.user.user_id, 'vacancy', id, 'GENERATE_FORM', `${fields.length} fields`);
     await client.query('COMMIT');
 
     return res.json({ message: 'Form generated. Review the preview, adjust it if needed, then publish.', vacancy: await fullVacancy(pool, id) });
@@ -371,7 +364,8 @@ async function generateForm(req, res) {
 }
 
 // PUT /api/vacancies/:id/form
-// Body: { fields: [{ requirement_id|null, label, field_type, is_required }] }  (array order = display order)
+// Body: { fields: [{ requirement_id|null, field_key, is_standard, section, label, field_type,
+//                    is_required, options: [..] (RADIO/SELECT), help_text }] }  (array order = display order)
 // HR adjusts the generated form: edit labels/types, required flag, order, add own questions.
 async function saveForm(req, res) {
   const id = toInt(req.params.id);
@@ -388,8 +382,26 @@ async function saveForm(req, res) {
     if (!label) e.label = 'Question text is required.';
     else if (label.length > 150) e.label = 'Max 150 characters.';
     if (!FIELD_TYPES.includes(field_type)) e.field_type = 'Choose a field type.';
+    let options = null;
+    if (CHOICE_TYPES.includes(field_type)) {
+      const raw = Array.isArray(f.options) ? f.options : String(f.options || '').split(',');
+      options = [...new Set(raw.map((o) => String(o).trim()).filter(Boolean))].slice(0, 20);
+      if (options.length < 2) e.options = 'Add at least 2 options.';
+      else if (options.some((o) => o.length > 80)) e.options = 'Each option must be 80 characters or fewer.';
+    }
+    const help = f.help_text ? String(f.help_text).trim().slice(0, 255) : null;
     if (Object.keys(e).length) fieldErrors[i] = e;
-    return { requirement_id: toInt(f.requirement_id), label, field_type, is_required: Boolean(f.is_required) };
+    return {
+      requirement_id: toInt(f.requirement_id),
+      field_key: f.field_key ? String(f.field_key).slice(0, 40) : null,
+      is_standard: Boolean(f.is_standard),
+      section: String(f.section || (f.requirement_id ? 'ROLE' : 'CLOSING')).toUpperCase().slice(0, 40),
+      label,
+      field_type,
+      is_required: Boolean(f.is_required),
+      options,
+      help_text: help || null,
+    };
   });
   if (fieldErrors.length) return sendErrors(res, { fields: fieldErrors });
 
@@ -406,30 +418,27 @@ async function saveForm(req, res) {
       return res.status(409).json({ message: 'This form can no longer be changed.' });
     }
 
-    // Requirement links must belong to this vacancy, and every requirement must keep one field
+    // Requirement links must belong to this vacancy, and every requirement needs at least one question
     const reqIds = new Set((await loadRequirements(client, id)).map((r) => r.requirement_id));
     const linked = new Set();
     for (const f of clean) {
       if (f.requirement_id && !reqIds.has(f.requirement_id)) f.requirement_id = null;
-      if (f.requirement_id) {
-        if (linked.has(f.requirement_id)) f.requirement_id = null; // only one field per requirement
-        else linked.add(f.requirement_id);
-      }
+      if (f.requirement_id) linked.add(f.requirement_id);
     }
     if (linked.size !== reqIds.size) {
       await client.query('ROLLBACK');
-      return res.status(400).json({ message: 'Every requirement needs its question in the form. Generate the form again if one was removed.' });
+      return res.status(400).json({ message: 'Every requirement needs at least one question in the form. Generate the form again if one was removed.' });
+    }
+    // Contact fields are needed for emails and duplicate detection
+    const keys = new Set(clean.map((f) => f.field_key).filter(Boolean));
+    const missingCore = CORE_KEYS.filter((k) => !keys.has(k));
+    if (missingCore.length) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ message: `These standard questions cannot be removed: ${missingCore.join(', ')}. Generate the form again.` });
     }
 
     await client.query('DELETE FROM form_field WHERE vacancy_id = $1', [id]);
-    let order = 1;
-    for (const f of clean) {
-      await client.query(
-        `INSERT INTO form_field (vacancy_id, requirement_id, label, field_type, is_required, display_order)
-         VALUES ($1, $2, $3, $4, $5, $6)`,
-        [id, f.requirement_id, f.label, f.field_type, f.is_required, order++]
-      );
-    }
+    await insertFields(client, id, clean);
     await logAudit(client, req.user.user_id, 'vacancy', id, 'SAVE_FORM', `${clean.length} fields`);
     await client.query('COMMIT');
     return res.json({ message: 'Form saved.', vacancy: await fullVacancy(pool, id) });
@@ -537,5 +546,5 @@ module.exports = {
   closeVacancy,
   deleteVacancy,
   // exported for tests
-  _private: { validateVacancyBody, sameRequirements, fieldForRequirement },
+  _private: { validateVacancyBody, sameRequirements },
 };

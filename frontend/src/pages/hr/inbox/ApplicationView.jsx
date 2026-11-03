@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import api, { getErrorMessage } from '../../../services/api';
 import { Alert, Avatar, Badge, Card, Spinner } from '../../../components/ui';
+import { SECTION_LABELS } from '../../../components/FormFieldInput';
 
 const TYPE = { SKILL: 'Skill', EXPERIENCE: 'Experience', QUALIFICATION: 'Qualification', CERTIFICATION: 'Certification' };
 const fmt = (d) => new Date(d).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' });
@@ -76,8 +77,11 @@ export default function ApplicationView() {
         <Card className="min-w-0 flex-1 p-6">
           <h2 className="text-xl font-bold">Submitted form</h2>
           <dl className="mt-4 flex flex-col gap-4">
-            {answers.map((ans) => (
+            {answers.map((ans, i) => (
               <div key={ans.field_id} className="flex flex-col gap-1 border-b border-cream-soft pb-4 last:border-0">
+                {(i === 0 || answers[i - 1].section !== ans.section) && (
+                  <p className="mb-1 mt-2 text-xs font-bold uppercase tracking-[0.08em] text-rust">{SECTION_LABELS[ans.section] || ans.section}</p>
+                )}
                 <dt className="flex flex-wrap items-center gap-2 text-[13px] font-semibold text-muted">
                   {ans.label}
                   {ans.requirement_name && (

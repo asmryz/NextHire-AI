@@ -7,14 +7,12 @@ const { testConnection } = require('./config/db');
 
 const app = express();
 
-// Allowed frontend addresses (trailing "/" removed; both Vite ports allowed in development)
-const allowedOrigins = [
-  (process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/+$/, ''),
-  'http://localhost:5173',
-  'http://localhost:5174',
-  'http://127.0.0.1:5173',
-];
-app.use(cors({ origin: allowedOrigins }));
+// Allow only one local frontend origin
+// CORS: any localhost port in development + the real website address (FRONTEND_URL)
+const siteUrl = (process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/+$/, '');
+const isLocal = (origin) => /^http:\/\/(localhost|127\.0\.0\.1):\d+$/.test(origin);
+app.use(cors({ origin: (origin, cb) => cb(null, !origin || origin === siteUrl || isLocal(origin)) }));
+
 app.use(express.json({ limit: '1mb' }));
 
 // ---- Routes (one line each) ------------------------------------------

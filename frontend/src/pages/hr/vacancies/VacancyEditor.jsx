@@ -3,13 +3,15 @@
 // SRS 4.2: create / edit a vacancy in 3 steps on one page
 //   1. Details (title, department, location, start + end date, description)
 //   2. Requirements (type, name, minimum, mandatory flag, weightage -> must total 100%)
-//   3. Generic Form Mechanism: "Generate Form" builds one question per requirement,
-//      HR adjusts the questions (text, type, required, order, extra questions), then Publish.
+//   3. Generic Form Mechanism: "Generate Form" builds a complete application form:
+//      standard sections (personal, education, experience, skills) + questions for every
+//      requirement (level / years / details). HR adjusts it, then Publish.
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import api, { getErrorMessage, getFieldErrors } from '../../../services/api';
 import { useDepartments } from '../../../services/departments';
 import { Alert, Badge, Button, Card, Checkbox, Input, PageHeader, Select, Spinner, Textarea } from '../../../components/ui';
+import FormFieldInput, { groupBySection, SECTION_LABELS } from '../../../components/FormFieldInput';
 
 const REQ_TYPES = [
   { value: 'SKILL', label: 'Skill' },
@@ -25,11 +27,18 @@ const MIN_HINT = {
 };
 const FIELD_TYPES = [
   { value: 'TEXT', label: 'Short text' },
+  { value: 'TEXTAREA', label: 'Long text' },
   { value: 'NUMBER', label: 'Number' },
-  { value: 'DATE', label: 'Date' },
+  { value: 'RADIO', label: 'Choice (radio buttons)' },
+  { value: 'SELECT', label: 'Dropdown' },
   { value: 'LIST', label: 'List (comma separated)' },
+  { value: 'DATE', label: 'Date' },
+  { value: 'EMAIL', label: 'Email' },
+  { value: 'PHONE', label: 'Phone' },
   { value: 'URL', label: 'Link (URL)' },
 ];
+const CHOICE = ['RADIO', 'SELECT'];
+const CORE_KEYS = ['full_name', 'email', 'phone', 'cnic']; // cannot be removed
 const EMPTY_DETAILS = { title: '', department_id: '', location: '', start_date: '', end_date: '', description: '' };
 
 let keySeed = 0;
@@ -76,7 +85,7 @@ export default function VacancyEditor() {
         ? v.requirements.map((r) => ({ ...r, key: newKey(), min_value: r.min_value || '', weightage: String(r.weightage) }))
         : [emptyRequirement()]
     );
-    setFields(v.form_fields.map((f) => ({ ...f, key: newKey() })));
+    setFields(v.form_fields.map((f) => ({ ...f, key: newKey(), optionsText: Array.isArray(f.options) ? f.options.join(', ') : '' })));
     setDirty(false);
     setFormDirty(false);
   };
@@ -144,7 +153,10 @@ export default function VacancyEditor() {
     setFormDirty(true);
   };
   const addField = () => {
-    setFields((list) => [...list, { key: newKey(), requirement_id: null, label: '', field_type: 'TEXT', is_required: false }]);
+    setFields((list) => [
+      ...list,
+      { key: newKey(), requirement_id: null, field_key: null, is_standard: false, section: 'CLOSING', label: '', field_type: 'TEXT', is_required: false, options: null, optionsText: '', help_text: null },
+    ]);
     setFormDirty(true);
   };
   const removeField = (key) => {
@@ -240,6 +252,12 @@ export default function VacancyEditor() {
   };
 
   const saveForm = async ({ quiet = false } = {}) => {
+    const toOptions = (f) => (f.optionsText || '').split(',').map((o) => o.trim()).filter(Boolean);
+    const badChoice = fields.findIndex((f) => CHOICE.includes(f.field_type) && toOptions(f).length < 2);
+    if (badChoice !== -1) {
+      show('error', `Question ${badChoice + 1} needs at least 2 options (comma separated).`);
+      return false;
+    }
     const bad = fields.findIndex((f) => !f.label.trim());
     if (bad !== -1) {
       show('error', `Question ${bad + 1} needs text.`);
@@ -247,7 +265,17 @@ export default function VacancyEditor() {
     }
     try {
       const { data } = await api.put(`/vacancies/${vacancy.vacancy_id}/form`, {
-        fields: fields.map(({ requirement_id, label, field_type, is_required }) => ({ requirement_id, label: label.trim(), field_type, is_required })),
+        fields: fields.map((f) => ({
+          requirement_id: f.requirement_id,
+          field_key: f.field_key,
+          is_standard: f.is_standard,
+          section: f.section,
+          label: f.label.trim(),
+          field_type: f.field_type,
+          is_required: f.is_required,
+          options: CHOICE.includes(f.field_type) ? toOptions(f) : null,
+          help_text: f.help_text,
+        })),
       });
       hydrate(data.vacancy);
       if (!quiet) show('success', data.message);
@@ -383,7 +411,8 @@ export default function VacancyEditor() {
           <div>
             <h2 className="text-xl font-bold">3. Application form</h2>
             <p className="mt-1 text-sm text-muted">
-              Generated from the requirements: one question per requirement. Adjust the wording, type and order, or add your own questions.
+              A complete form: standard sections (personal details, education, experience, skills) plus questions for each requirement.
+              Adjust the wording, answer type, options and order, or add your own questions.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -407,27 +436,44 @@ export default function VacancyEditor() {
         ) : (
           <fieldset disabled={reqLocked} className="flex flex-col gap-3">
             <legend className="sr-only">Form questions</legend>
-            {fields.map((f, i) => (
-              <div key={f.key} className="flex flex-col gap-3 rounded-xl border border-line bg-white p-4">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className={`rounded-full px-3 py-1 text-xs font-semibold ${f.requirement_id ? 'bg-cream text-brown' : 'bg-cream-soft text-muted'}`}>
-                    Q{i + 1} · {f.requirement_id ? `Linked to ${reqName(f.requirement_id) || 'requirement'}` : 'Custom question'}
-                  </span>
-                  <div className="flex gap-1">
-                    <Button variant="ghost" onClick={() => moveField(i, -1)} disabled={i === 0} aria-label={`Move question ${i + 1} up`}>↑</Button>
-                    <Button variant="ghost" onClick={() => moveField(i, 1)} disabled={i === fields.length - 1} aria-label={`Move question ${i + 1} down`}>↓</Button>
-                    {!f.requirement_id && (
-                      <Button variant="ghost" className="text-danger" onClick={() => removeField(f.key)}>Remove</Button>
+            {fields.map((f, i) => {
+              const showSection = i === 0 || fields[i - 1].section !== f.section;
+              const canRemove = !CORE_KEYS.includes(f.field_key);
+              return (
+                <div key={f.key} className="flex flex-col gap-3">
+                  {showSection && (
+                    <h3 className="mt-2 text-sm font-bold uppercase tracking-[0.08em] text-muted">{SECTION_LABELS[f.section] || f.section}</h3>
+                  )}
+                  <div className="flex flex-col gap-3 rounded-xl border border-line bg-white p-4">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <span className={`rounded-full px-3 py-1 text-xs font-semibold ${f.requirement_id ? 'bg-cream text-brown' : 'bg-cream-soft text-muted'}`}>
+                        Q{i + 1} · {f.requirement_id ? `Linked to ${reqName(f.requirement_id) || 'requirement'}` : f.is_standard ? 'Standard question' : 'Custom question'}
+                      </span>
+                      <div className="flex gap-1">
+                        <Button variant="ghost" onClick={() => moveField(i, -1)} disabled={i === 0} aria-label={`Move question ${i + 1} up`}>↑</Button>
+                        <Button variant="ghost" onClick={() => moveField(i, 1)} disabled={i === fields.length - 1} aria-label={`Move question ${i + 1} down`}>↓</Button>
+                        {canRemove && (
+                          <Button variant="ghost" className="text-danger" onClick={() => removeField(f.key)} aria-label={`Remove question ${i + 1}`}>Remove</Button>
+                        )}
+                      </div>
+                    </div>
+                    <div className="grid gap-3 md:grid-cols-[1fr_220px_auto] md:items-end">
+                      <Input label="Question" value={f.label} maxLength={150} onChange={(e) => updateField(f.key, { label: e.target.value })} />
+                      <Select label="Answer type" value={f.field_type} onChange={(e) => updateField(f.key, { field_type: e.target.value })} options={FIELD_TYPES} />
+                      <Checkbox label="Required" checked={f.is_required} onChange={(e) => updateField(f.key, { is_required: e.target.checked })} />
+                    </div>
+                    {CHOICE.includes(f.field_type) && (
+                      <Input
+                        label="Options (comma separated)"
+                        placeholder="e.g. Beginner, Intermediate, Expert"
+                        value={f.optionsText || ''}
+                        onChange={(e) => updateField(f.key, { optionsText: e.target.value })}
+                      />
                     )}
                   </div>
                 </div>
-                <div className="grid gap-3 md:grid-cols-[1fr_200px_auto] md:items-end">
-                  <Input label="Question" value={f.label} maxLength={150} onChange={(e) => updateField(f.key, { label: e.target.value })} />
-                  <Select label="Answer type" value={f.field_type} onChange={(e) => updateField(f.key, { field_type: e.target.value })} options={FIELD_TYPES} />
-                  <Checkbox label="Required" checked={f.is_required} onChange={(e) => updateField(f.key, { is_required: e.target.checked })} />
-                </div>
-              </div>
-            ))}
+              );
+            })}
             <div className="flex flex-wrap gap-2">
               <Button variant="secondary" onClick={addField}>+ Add custom question</Button>
               <Button variant="secondary" onClick={onSaveForm} loading={busy === 'form'} disabled={!formDirty || Boolean(busy)}>Save form changes</Button>
@@ -454,23 +500,23 @@ export default function VacancyEditor() {
   );
 }
 
-// How the candidate will see the form (read-only preview)
+// How the candidate will see the form (read-only preview, grouped by section)
 function FormPreview({ fields, title }) {
-  const inputType = { TEXT: 'text', NUMBER: 'number', DATE: 'date', LIST: 'text', URL: 'url' };
+  const groups = groupBySection(
+    fields.map((f) => ({ ...f, options: CHOICE.includes(f.field_type) ? (f.optionsText || '').split(',').map((o) => o.trim()).filter(Boolean) : null }))
+  );
   return (
     <div className="rounded-xl border border-line bg-paper p-5 sm:p-6">
       <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">Candidate view</p>
       <h3 className="mt-1 text-lg font-bold">Apply for {title || 'this position'}</h3>
-      <form className="mt-5 grid gap-4" onSubmit={(e) => e.preventDefault()}>
-        {fields.map((f) => (
-          <Input
-            key={f.key}
-            label={f.label || 'Untitled question'}
-            type={inputType[f.field_type] || 'text'}
-            required={f.is_required}
-            hint={f.field_type === 'LIST' ? 'Separate items with commas.' : undefined}
-            disabled
-          />
+      <form className="mt-5 flex flex-col gap-6" onSubmit={(e) => e.preventDefault()}>
+        {groups.map((g, gi) => (
+          <section key={`${g.section}-${gi}`} className="flex flex-col gap-4 rounded-xl border border-line bg-white p-5">
+            <h4 className="font-heading text-base font-bold">{g.label}</h4>
+            {g.fields.map((f) => (
+              <FormFieldInput key={f.key} field={f} disabled />
+            ))}
+          </section>
         ))}
         <Input label="Portfolio / context link (optional)" type="url" hint="Not used for scoring." disabled />
         <div>

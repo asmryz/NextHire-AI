@@ -13,6 +13,9 @@ const { sendApplicationConfirmation } = require('../utils/applicationEmails');
 
 const MAX_ANSWER = 2000;
 const URL_RE = /^https?:\/\/[^\s.]+\.[^\s]{2,}$/i;
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+const PHONE_RE = /^\+?\d{10,15}$/;
+const CNIC_RE = /^\d{5}-\d{7}-\d$/;
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 const toInt = (v) => {
@@ -42,6 +45,17 @@ function checkAnswer(field, raw) {
       return isValidDate(value) ? { value, error: null } : { value, error: 'Please enter a valid date.' };
     case 'URL':
       return URL_RE.test(value) ? { value, error: null } : { value, error: 'Please enter a valid URL' };
+    case 'EMAIL':
+      return EMAIL_RE.test(value) ? { value: value.toLowerCase(), error: null } : { value, error: 'Please enter a valid email address.' };
+    case 'PHONE': {
+      const p = value.replace(/[\s-]/g, '');
+      return PHONE_RE.test(p) ? { value: p, error: null } : { value, error: 'Please enter a valid phone number.' };
+    }
+    case 'RADIO':
+    case 'SELECT': {
+      const options = Array.isArray(field.options) ? field.options : [];
+      return options.includes(value) ? { value, error: null } : { value, error: 'Please choose one of the options.' };
+    }
     case 'LIST': {
       // "React, , Node ,JS" -> "React, Node, JS"
       const items = value.split(',').map((s) => s.trim()).filter(Boolean);
@@ -49,6 +63,9 @@ function checkAnswer(field, raw) {
       return { value: items.join(', '), error: null };
     }
     default:
+      if (field.field_key === 'cnic' && !CNIC_RE.test(value)) {
+        return { value, error: 'Please enter a valid CNIC (XXXXX-XXXXXXX-X).' };
+      }
       return { value, error: null };
   }
 }
@@ -124,7 +141,7 @@ async function applyToVacancy(req, res) {
 
     // Validate every answer against the vacancy's own form
     const fieldsRes = await client.query(
-      `SELECT field_id, label, field_type, is_required
+      `SELECT field_id, field_key, label, field_type, is_required, options
          FROM form_field WHERE vacancy_id = $1 ORDER BY display_order, field_id`,
       [vacancyId]
     );
@@ -231,7 +248,7 @@ async function getMyApplication(req, res) {
 
     const [answers, history] = await Promise.all([
       pool.query(
-        `SELECT f.field_id, f.label, f.field_type, ans.answer_value
+        `SELECT f.field_id, f.label, f.field_type, f.section, ans.answer_value
            FROM form_field f
            LEFT JOIN application_answer ans ON ans.field_id = f.field_id AND ans.application_id = $1
           WHERE f.vacancy_id = $2

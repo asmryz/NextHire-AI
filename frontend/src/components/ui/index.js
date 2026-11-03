@@ -12,6 +12,7 @@ export { default as ConfirmDialog } from './ConfirmDialog';
 export { default as Input } from './Input';
 export { default as Logo } from './Logo';
 export { default as PageHeader } from './PageHeader';
+export { default as RadioGroup } from './RadioGroup';
 export { default as Select } from './Select';
 export { default as Spinner } from './Spinner';
 export { default as Textarea } from './Textarea';

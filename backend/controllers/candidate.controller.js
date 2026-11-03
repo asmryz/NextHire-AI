@@ -219,7 +219,7 @@ async function getOpenVacancy(req, res) {
         [id]
       ),
       pool.query(
-        `SELECT field_id, label, field_type, is_required, display_order
+        `SELECT field_id, field_key, section, label, field_type, is_required, options, help_text, display_order
            FROM form_field WHERE vacancy_id = $1 ORDER BY display_order, field_id`,
         [id]
       ),

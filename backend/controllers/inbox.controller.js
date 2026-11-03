@@ -127,7 +127,7 @@ async function getApplication(req, res) {
 
     const [answers, history, score, flags] = await Promise.all([
       pool.query(
-        `SELECT f.field_id, f.label, f.field_type, f.is_required, ans.answer_value,
+        `SELECT f.field_id, f.label, f.field_type, f.is_required, f.section, f.field_key, ans.answer_value,
                 r.requirement_id, r.req_type, r.name AS requirement_name, r.min_value, r.is_mandatory,
                 r.weightage::float AS weightage
            FROM form_field f

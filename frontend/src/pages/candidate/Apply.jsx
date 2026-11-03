@@ -1,14 +1,38 @@
 // frontend/src/pages/candidate/Apply.jsx
 // Owner: Shivani
 // SRS 4.3: the position-specific structured form (no CV), optional portfolio link,
-// validation, submit -> confirmation email.
+// validation, submit -> confirmation email. Personal details are pre-filled from the profile.
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import api, { getErrorMessage } from '../../services/api';
-import { Alert, Button, Card, Input, Spinner, Textarea } from '../../components/ui';
+import { Alert, Button, Card, Input, Spinner } from '../../components/ui';
+import FormFieldInput, { groupBySection } from '../../components/FormFieldInput';
 
-const INPUT_TYPE = { TEXT: 'text', NUMBER: 'number', DATE: 'date', LIST: 'text', URL: 'url' };
 const URL_RE = /^https?:\/\/[^\s.]+\.[^\s]{2,}$/i;
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+const GENDER = { MALE: 'Male', FEMALE: 'Female', OTHER: 'Prefer not to say' };
+
+// Answers taken from the candidate's profile (SRS: profile details pre-fill applications)
+function prefill(fields, profile) {
+  if (!profile) return {};
+  const fromProfile = {
+    full_name: profile.full_name,
+    email: profile.email,
+    phone: profile.phone,
+    cnic: profile.cnic,
+    city: profile.city,
+    gender: GENDER[profile.gender],
+    highest_qualification: profile.highest_qualification,
+  };
+  const out = {};
+  for (const f of fields) {
+    const v = f.field_key ? fromProfile[f.field_key] : null;
+    if (!v) continue;
+    if (Array.isArray(f.options) && f.options.length && !f.options.includes(v)) continue; // must be a valid option
+    out[f.field_id] = String(v);
+  }
+  return out;
+}
 
 export default function Apply() {
   const { id } = useParams();
@@ -24,9 +48,11 @@ export default function Apply() {
   const [done, setDone] = useState(null);
 
   useEffect(() => {
-    api
-      .get(`/candidate/vacancies/${id}`)
-      .then(({ data: d }) => setData(d))
+    Promise.all([api.get(`/candidate/vacancies/${id}`), api.get('/candidate/profile').catch(() => ({ data: {} }))])
+      .then(([vac, prof]) => {
+        setData(vac.data);
+        setAnswers(prefill(vac.data.vacancy.form_fields, prof.data.profile));
+      })
       .catch((err) => setMessage(getErrorMessage(err)))
       .finally(() => setLoading(false));
   }, [id]);
@@ -46,6 +72,9 @@ export default function Apply() {
       }
       if (f.field_type === 'NUMBER' && (!Number.isFinite(Number(v)) || Number(v) < 0)) e[f.field_id] = 'Please enter a valid number.';
       if (f.field_type === 'URL' && !URL_RE.test(v)) e[f.field_id] = 'Please enter a valid URL';
+      if (f.field_type === 'EMAIL' && !EMAIL_RE.test(v)) e[f.field_id] = 'Please enter a valid email address.';
+      if (f.field_type === 'PHONE' && !/^\+?\d{10,15}$/.test(v.replace(/[\s-]/g, ''))) e[f.field_id] = 'Please enter a valid phone number.';
+      if (f.field_key === 'cnic' && !/^\d{5}-\d{7}-\d$/.test(v)) e[f.field_id] = 'Please enter a valid CNIC (XXXXX-XXXXXXX-X).';
     }
     if (portfolio.trim() && !URL_RE.test(portfolio.trim())) e.portfolio_link = 'Please enter a valid URL';
     setErrors(e);
@@ -124,34 +153,21 @@ export default function Apply() {
           <Card className="p-6">
             <Alert type="error" className="mb-5">{message}</Alert>
             <form onSubmit={onSubmit} noValidate className="flex flex-col gap-5">
-              {v.form_fields.map((f) =>
-                f.field_type === 'TEXT' ? (
-                  <Textarea
-                    key={f.field_id}
-                    label={f.label}
-                    rows={3}
-                    required={f.is_required}
-                    maxLength={2000}
-                    value={answers[f.field_id] || ''}
-                    onChange={(e) => setAnswer(f.field_id, e.target.value)}
-                    error={errors[f.field_id]}
-                  />
-                ) : (
-                  <Input
-                    key={f.field_id}
-                    label={f.label}
-                    type={INPUT_TYPE[f.field_type] || 'text'}
-                    min={f.field_type === 'NUMBER' ? '0' : undefined}
-                    step={f.field_type === 'NUMBER' ? 'any' : undefined}
-                    required={f.is_required}
-                    placeholder={f.field_type === 'URL' ? 'https://' : undefined}
-                    hint={f.field_type === 'LIST' ? 'Separate items with commas, e.g. React, Node.js, SQL' : undefined}
-                    value={answers[f.field_id] || ''}
-                    onChange={(e) => setAnswer(f.field_id, e.target.value)}
-                    error={errors[f.field_id]}
-                  />
-                )
-              )}
+              {groupBySection(v.form_fields).map((g, gi) => (
+                <section key={`${g.section}-${gi}`} className="flex flex-col gap-4 border-b border-line pb-6 last:border-0">
+                  <h2 className="font-heading text-lg font-bold">{g.label}</h2>
+                  {g.fields.map((f) => (
+                    <FormFieldInput
+                      key={f.field_id}
+                      field={f}
+                      value={answers[f.field_id] || ''}
+                      onChange={(val) => setAnswer(f.field_id, val)}
+                      error={errors[f.field_id]}
+                      readOnly={f.field_key === 'email'}
+                    />
+                  ))}
+                </section>
+              ))}
 
               <Input
                 label="Portfolio / context link (optional)"
