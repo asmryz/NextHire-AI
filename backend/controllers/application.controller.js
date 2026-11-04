@@ -74,12 +74,20 @@ function checkAnswer(field, raw) {
 // Set N8N_APPLICATION_WEBHOOK_URL in backend/.env when the workflow is ready.
 function notifyAiAgent(applicationId) {
   const url = process.env.N8N_APPLICATION_WEBHOOK_URL;
-  if (!url || typeof fetch !== 'function') return;
+  if (!url) {
+    console.warn(`n8n: N8N_APPLICATION_WEBHOOK_URL is not set, application #${applicationId} will be scored by the 10-minute schedule.`);
+    return;
+  }
   fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ application_id: applicationId, event: 'APPLICATION_SUBMITTED' }),
-  }).catch((err) => console.error('n8n webhook failed (application stays pending):', err.message));
+  })
+    .then((r) => {
+      if (r.ok) console.log(`n8n: application #${applicationId} sent for AI scoring.`);
+      else console.error(`n8n webhook failed (HTTP ${r.status}). Is the workflow published? URL: ${url}`);
+    })
+    .catch((err) => console.error('n8n webhook failed (application stays pending):', err.message));
 }
 
 // ================================================================ APPLY
