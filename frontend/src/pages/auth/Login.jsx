@@ -57,29 +57,35 @@ export default function Login() {
   };
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-7">
       <div>
-        <h1 className="text-3xl font-extrabold tracking-tight">Welcome back</h1>
-        <p className="mt-1 text-sm text-muted">Log in to continue to NexHire AI.</p>
+        <h1 className="text-2xl font-semibold">Welcome back</h1>
+        <p className="mt-1.5 text-sm text-muted">Sign in to your NexHire AI account.</p>
       </div>
 
       <Alert type="info">{notice}</Alert>
       <Alert type="error">{serverError}</Alert>
 
       <form onSubmit={onSubmit} noValidate className="flex flex-col gap-4">
-        <Input label="Email" name="email" type="email" autoComplete="email" value={form.email} onChange={onChange} error={errors.email} required />
-        <Input label="Password" name="password" type="password" autoComplete="current-password" value={form.password} onChange={onChange} error={errors.password} required />
-        <div className="flex justify-end">
-          <Link to="/forgot-password" className="text-sm font-semibold text-brown underline-offset-4 hover:text-rust hover:underline">
-            Forgot Password?
+        <Input
+          label="Email" name="email" type="email" autoComplete="email"
+          value={form.email} onChange={onChange} error={errors.email} required
+        />
+        <div className="flex flex-col gap-1">
+          <Input
+            label="Password" name="password" type="password" autoComplete="current-password"
+            value={form.password} onChange={onChange} error={errors.password} required
+          />
+          <Link to="/forgot-password" className="self-end py-1 text-[13px] text-muted hover:text-brown hover:underline">
+            Forgot password?
           </Link>
         </div>
-        <Button type="submit" loading={loading} fullWidth>Login</Button>
+        <Button type="submit" loading={loading} fullWidth>Log in</Button>
       </form>
 
       <p className="text-center text-sm text-muted">
-        New candidate?{' '}
-        <Link to="/signup" className="font-semibold text-brown underline-offset-4 hover:text-rust hover:underline">Create an account</Link>
+        Looking for a job?{' '}
+        <Link to="/signup" className="font-medium text-brown underline underline-offset-4 hover:text-rust">Create an account</Link>
       </p>
     </div>
   );

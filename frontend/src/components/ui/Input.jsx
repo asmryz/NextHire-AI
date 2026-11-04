@@ -13,7 +13,7 @@ export default function Input({ label, error, hint, type = 'text', className = '
   return (
     <div className={`flex flex-col gap-1.5 ${className}`}>
       {label && (
-        <label htmlFor={id} className="text-[13px] font-semibold text-brown">
+                <label htmlFor={id} className="text-[13px] font-medium text-brown">
           {label}
           {required && <span className="text-danger"> *</span>}
         </label>
