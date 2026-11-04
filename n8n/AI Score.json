@@ -1,0 +1,369 @@
+{
+  "name": "AI Score",
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT a.application_id\n  FROM application a\n WHERE a.is_active\n   AND NOT EXISTS (SELECT 1 FROM ai_score s\n                    WHERE s.application_id = a.application_id\n                      AND s.is_current AND s.eval_status = 'EVALUATED')\n ORDER BY a.submitted_at\n LIMIT 5;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -240,
+        -32
+      ],
+      "id": "72950332-35fd-4b1f-8df6-9afe1531c8a8",
+      "name": "Find Pending Application",
+      "credentials": {
+        "postgres": {
+          "id": "gqHsKGdnnW60zDSy",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT a.application_id, a.vacancy_id, v.title AS vacancy_title,\n       (SELECT json_agg(json_build_object(\n                 'requirement_id', r.requirement_id, 'type', r.req_type, 'name', r.name,\n                 'min_value', r.min_value, 'mandatory', r.is_mandatory, 'weightage', r.weightage)\n               ORDER BY r.requirement_id)\n          FROM vacancy_requirement r WHERE r.vacancy_id = a.vacancy_id) AS requirements,\n       (SELECT json_agg(json_build_object(\n                 'requirement_id', f.requirement_id, 'question', f.label, 'answer', ans.answer_value)\n               ORDER BY f.display_order, f.field_id)\n          FROM form_field f\n          LEFT JOIN application_answer ans\n                 ON ans.field_id = f.field_id AND ans.application_id = a.application_id\n         WHERE f.vacancy_id = a.vacancy_id\n           AND COALESCE(f.field_key, '') NOT IN ('full_name','email','phone','cnic','gender','city','cover_note')) AS answers\n  FROM application a\n  JOIN vacancy v ON v.vacancy_id = a.vacancy_id\n WHERE a.application_id = $1 AND a.is_active;",
+        "options": {
+          "queryBatching": "independently",
+          "queryReplacement": "={{ $json.application_id }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -32,
+        -32
+      ],
+      "id": "f73a72c1-2f1f-4761-8f1a-1d85ca94d159",
+      "name": "Load Applications",
+      "credentials": {
+        "postgres": {
+          "id": "gqHsKGdnnW60zDSy",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// n8n Code node: \"Build prompt\"   (Mode: Run Once for Each Item)\n// Input: one row from \"Load application\" (application_id, vacancy_id, vacancy_title, requirements, answers)\nconst row = $input.item.json;\nconst reqs = typeof row.requirements === 'string' ? JSON.parse(row.requirements) : row.requirements || [];\nconst answers = typeof row.answers === 'string' ? JSON.parse(row.answers) : row.answers || [];\n\nconst reqText = reqs\n  .map((r) => `- requirement_id ${r.requirement_id} | ${r.type} | \"${r.name}\"` +\n    (r.min_value ? ` | minimum: ${r.min_value}` : '') + (r.mandatory ? ' | MANDATORY' : ''))\n  .join('\\n');\n\n// Only the structured answers are scored (portfolio link and gender are never sent, BR-3)\nconst ansText = answers\n  .map((a) => `- ${a.requirement_id ? `requirement_id ${a.requirement_id}` : 'extra question'} | Q: ${a.question} | A: ${a.answer ?? '(no answer)'}`)\n  .join('\\n');\n\nconst prompt = `You are the screening assistant of a recruitment system. Evaluate ONE job application\nstrictly against the listed requirements of the vacancy \"${row.vacancy_title}\".\n\nRules:\n- Judge each requirement only from the candidate's answers. Do not guess or invent facts.\n- Treat equivalent skills as the same (e.g. \"JS\" = \"JavaScript\", \"ML\" = \"Machine Learning\", \"Postgres\" = \"PostgreSQL\").\n- EXPERIENCE: compare the number of years with the minimum. Met only if years >= minimum.\n- QUALIFICATION / CERTIFICATION: met if the answer is the same or clearly higher / equivalent.\n- If no minimum is given, met when the candidate clearly has it.\n- Ignore name, gender, city or anything not related to the requirements.\n\nRequirements:\n${reqText}\n\nCandidate answers:\n${ansText}\n\nReturn ONLY JSON, no markdown, in exactly this shape:\n{\"results\":[{\"requirement_id\":<number>,\"is_met\":<true|false>,\"matched_value\":\"<short evidence from the answer, max 80 chars>\"}]}\nInclude every requirement_id exactly once.`;\n\nreturn { json: { ...row, requirements: reqs, prompt } };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        160,
+        -160
+      ],
+      "id": "47ac7c6b-0a43-48e2-9214-ba1dfb74ba56",
+      "name": "Build prompt"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "models/gemini-3-flash-preview",
+          "cachedResultName": "models/gemini-3-flash-preview",
+          "cachedResultUrl": ""
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=   {{ $json.prompt }}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {
+          "temperature": 0
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        368,
+        -160
+      ],
+      "id": "526b241d-e440-4f55-addd-531b96df98f7",
+      "name": "Message a model",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "Lw6ZbqcRo4q5x9Oc",
+          "name": "Gemini NexHire"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const STRONG_AT = 75;   // >= 75% and all mandatory met  -> STRONG\nconst POSSIBLE_AT = 50; // >= 50%                        -> POSSIBLE, else NOT_A_FIT\nconst MANDATORY_CAP = 40; // missing a mandatory requirement caps the score here\n\nconst prev = $('Build prompt').item.json;\nconst reqs = prev.requirements;\n\n// Find the model's text whatever shape the Gemini node returns\nconst out = $input.item.json;\nconst text =\n  out?.content?.parts?.[0]?.text ??\n  out?.candidates?.[0]?.content?.parts?.[0]?.text ??\n  out?.text ?? out?.output ?? out?.message?.content ??\n  (typeof out === 'string' ? out : JSON.stringify(out));\n\nlet parsed;\ntry {\n  const cleaned = String(text).replace(/```json|```/g, '').trim();\n  const start = cleaned.indexOf('{');\n  const end = cleaned.lastIndexOf('}');\n  parsed = JSON.parse(cleaned.slice(start, end + 1));\n} catch (e) {\n  throw new Error(`Gemini did not return valid JSON for application ${prev.application_id}`);\n}\n\nconst byId = new Map((parsed.results || []).map((r) => [Number(r.requirement_id), r]));\nlet total = 0;\nlet mandatoryMissing = false;\n\nconst details = reqs.map((r) => {\n  const res = byId.get(Number(r.requirement_id)) || { is_met: false, matched_value: 'Not answered' };\n  const isMet = res.is_met === true || res.is_met === 'true';\n  const weight = Number(r.weightage) || 0;\n  const awarded = isMet ? weight : 0;\n  total += awarded;\n  if (r.mandatory && !isMet) mandatoryMissing = true;\n  return {\n    requirement_id: Number(r.requirement_id),\n    is_met: isMet,\n    matched_value: String(res.matched_value || '').slice(0, 100),\n    weight_awarded: awarded,\n  };\n});\n\nlet score = Math.round(total * 100) / 100;\nif (mandatoryMissing) score = Math.min(score, MANDATORY_CAP);\n\nlet tag = 'NOT_A_FIT';\nif (!mandatoryMissing && score >= STRONG_AT) tag = 'STRONG';\nelse if (!mandatoryMissing && score >= POSSIBLE_AT) tag = 'POSSIBLE';\n\nreturn {\n  json: {\n    application_id: prev.application_id,\n    vacancy_id: prev.vacancy_id,\n    fulfilment_pct: score,\n    ai_match_tag: tag,\n    mandatory_missing: mandatoryMissing,\n    details_json: JSON.stringify(details),\n    // Same details as base64 (no commas), so n8n's comma-separated Query Parameters can't break it\n    details_b64: typeof Buffer !== 'undefined'\n      ? Buffer.from(JSON.stringify(details), 'utf8').toString('base64')\n      : btoa(unescape(encodeURIComponent(JSON.stringify(details)))),\n  },\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        624,
+        48
+      ],
+      "id": "0ef90de8-cf86-4b53-b731-d8ceb7fc1069",
+      "name": "Calculate score"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE ai_score SET is_current = false\n WHERE application_id = $1 AND is_current\nRETURNING score_id;",
+        "options": {
+          "queryReplacement": "={{ $json.application_id }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        800,
+        48
+      ],
+      "id": "6789e884-1d4c-494f-bf01-36d57ee94fd2",
+      "name": "Retire old score",
+      "credentials": {
+        "postgres": {
+          "id": "gqHsKGdnnW60zDSy",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH ver AS (\n  SELECT COALESCE(MAX(version), 0) + 1 AS v FROM ai_score WHERE application_id = $1\n), ins AS (\n  INSERT INTO ai_score (application_id, version, is_current, fulfilment_pct, ai_match_tag, eval_status, evaluated_at)\n  SELECT $1, v, true, $2, $3::match_tag, 'EVALUATED', now() FROM ver\n  RETURNING score_id\n)\nINSERT INTO score_detail (score_id, requirement_id, is_met, matched_value, weight_awarded)\nSELECT ins.score_id, d.requirement_id, d.is_met, d.matched_value, d.weight_awarded\n  FROM ins, json_to_recordset(convert_from(decode($4, 'base64'), 'UTF8')::json)\n       AS d(requirement_id int, is_met boolean, matched_value text, weight_awarded numeric)\nRETURNING score_id;",
+        "options": {
+          "queryReplacement": "={{ $('Calculate score').item.json.application_id }}, {{ $('Calculate score').item.json.fulfilment_pct }}, {{ $('Calculate score').item.json.ai_match_tag }}, {{ $('Calculate score').item.json.details_b64 }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1008,
+        48
+      ],
+      "id": "bdeed24c-735b-4557-84e6-05dd204e6cc7",
+      "name": "Save score",
+      "credentials": {
+        "postgres": {
+          "id": "gqHsKGdnnW60zDSy",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE ai_score s SET rank_no = r.rn\n  FROM (SELECT s2.score_id, RANK() OVER (ORDER BY s2.fulfilment_pct DESC) AS rn\n          FROM ai_score s2\n          JOIN application a ON a.application_id = s2.application_id\n         WHERE a.vacancy_id = $1 AND a.is_active\n           AND s2.is_current AND s2.eval_status = 'EVALUATED') r\n WHERE s.score_id = r.score_id\nRETURNING s.application_id, s.fulfilment_pct, s.rank_no;",
+        "options": {
+          "queryReplacement": "={{ $('Calculate score').item.json.vacancy_id }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1216,
+        48
+      ],
+      "id": "695151b1-f01f-45b4-ac6b-ca3dcadd60e4",
+      "name": "Rank Vacany",
+      "credentials": {
+        "postgres": {
+          "id": "gqHsKGdnnW60zDSy",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "application-submitted",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -16,
+        160
+      ],
+      "id": "7d45ee4a-75c1-4e18-a2a4-c350676413b0",
+      "name": "Webhook",
+      "webhookId": "91a0950e-3abb-44bf-a9c4-72f5d76567eb"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "caba394d-afca-46b5-a04f-bb1ec4a2b396",
+              "name": "application_id",
+              "value": "={{ $json.body.application_id }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        336,
+        144
+      ],
+      "id": "6d3a7532-ce6a-49fc-9b47-66c488641a2c",
+      "name": "Webhook1"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 10
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -448,
+        -32
+      ],
+      "id": "1bc3aa96-3df1-4ccf-b41e-4101aff42e67",
+      "name": "Schedule Trigger"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Find Pending Application": {
+      "main": [
+        [
+          {
+            "node": "Load Applications",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load Applications": {
+      "main": [
+        [
+          {
+            "node": "Build prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build prompt": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Calculate score",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate score": {
+      "main": [
+        [
+          {
+            "node": "Retire old score",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Retire old score": {
+      "main": [
+        [
+          {
+            "node": "Save score",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save score": {
+      "main": [
+        [
+          {
+            "node": "Rank Vacany",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook1": {
+      "main": [
+        [
+          {
+            "node": "Load Applications",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Find Pending Application",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "0c295dba-87a6-4dce-8a07-66758146ed02",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "56d18f11031b46a92d6f52b6853d3cd29e5abf3b98780e13eb7386695a4a1f42"
+  },
+  "nodeGroups": [],
+  "id": "P6raiCP0vUUrMew6",
+  "tags": []
+}
