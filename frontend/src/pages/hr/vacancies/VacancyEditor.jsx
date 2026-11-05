@@ -19,12 +19,19 @@ const REQ_TYPES = [
   { value: 'QUALIFICATION', label: 'Qualification' },
   { value: 'CERTIFICATION', label: 'Certification' },
 ];
-const MIN_HINT = {
-  SKILL: 'e.g. Intermediate',
-  EXPERIENCE: 'Minimum years, e.g. 2',
-  QUALIFICATION: 'e.g. BS Computer Science',
-  CERTIFICATION: 'Optional',
+// Same lists as backend/utils/formTemplate.js (MIN_LEVELS). Certifications have no minimum.
+const MIN_LEVELS = {
+  SKILL: ['Entry level', 'Medium', 'Expert'],
+  EXPERIENCE: ['Entry level (0-2 years)', 'Medium (2-5 years)', 'Expert (5+ years)'],
+  QUALIFICATION: ['Entry level', 'Medium', 'Expert'],
+  CERTIFICATION: [],
 };
+// An older vacancy may have a free-text minimum: show it too, so editing details does not change it
+const minOptions = (type, current) => [
+  ...(MIN_LEVELS[type] || []).map((m) => ({ value: m, label: m })),
+  ...(current && !(MIN_LEVELS[type] || []).includes(current) ? [{ value: current, label: `${current} (old value)` }] : []),
+];
+const validMin = (type, value) => ((MIN_LEVELS[type] || []).includes(value) ? value : '');
 const FIELD_TYPES = [
   { value: 'TEXT', label: 'Short text' },
   { value: 'TEXTAREA', label: 'Long text' },
@@ -100,9 +107,10 @@ export default function VacancyEditor() {
       .finally(() => setLoading(false));
   }, [id, isNew]);
 
+  // Only errors jump to the top (so HR sees what to fix); success messages do not move the page
   const show = (type, text) => {
     setMessage({ type, text });
-    topRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (type === 'error') topRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
   // ---------------------------------------------------------- derived state
@@ -199,7 +207,7 @@ export default function VacancyEditor() {
       requirements: requirements.map(({ req_type, name, min_value, is_mandatory, weightage }) => ({
         req_type,
         name: name.trim(),
-        min_value: min_value?.trim() || null,
+        min_value: req_type === 'CERTIFICATION' ? null : min_value || null,
         is_mandatory,
         weightage: Number(weightage),
       })),
@@ -317,14 +325,14 @@ export default function VacancyEditor() {
     return (
       <div className="flex flex-col gap-4">
         <Alert type="error">{message.text || 'Vacancy not found.'}</Alert>
-        <Link to="/hr/vacancies" className="font-semibold underline">Back to vacancies</Link>
+        <Link to="/hr/vacancies" className="font-medium underline">Back to vacancies</Link>
       </div>
     );
   }
 
   return (
-    <div ref={topRef} className="flex scroll-mt-6 flex-col gap-6">
-      <Link to="/hr/vacancies" className="w-fit text-sm font-semibold text-muted hover:text-brown">← All vacancies</Link>
+    <div ref={topRef} className="mx-auto flex w-full max-w-[1100px] scroll-mt-6 flex-col gap-4">
+      <Link to="/hr/vacancies" className="w-fit text-sm text-muted hover:text-brown">← All vacancies</Link>
 
       <PageHeader
         title={isNew ? 'New vacancy' : details.title || 'Vacancy'}
@@ -344,9 +352,9 @@ export default function VacancyEditor() {
       )}
 
       {/* ---------------- 1. Details ---------------- */}
-      <Card className="flex flex-col gap-5 p-6">
-        <h2 className="text-xl font-bold">1. Vacancy details</h2>
-        <fieldset disabled={readOnly} className="grid gap-4 md:grid-cols-2">
+      <Card className="flex flex-col gap-4 p-5">
+        <h2 className="flex items-center gap-2.5 text-base font-semibold"><span className="flex h-6 w-6 items-center justify-center rounded-full bg-brown text-xs text-cream">1</span>Vacancy details</h2>
+        <fieldset disabled={readOnly} className="grid gap-x-4 gap-y-3 md:grid-cols-2">
           <Input label="Title" name="title" value={details.title} onChange={onDetail} error={errors.title} required className="md:col-span-2" />
           <Select
             label="Department"
@@ -361,36 +369,52 @@ export default function VacancyEditor() {
           <Input label="Location" name="location" placeholder="e.g. Karachi (on-site)" value={details.location} onChange={onDetail} error={errors.location} />
           <Input label="Start date" name="start_date" type="date" value={details.start_date} onChange={onDetail} error={errors.start_date} hint="Applications open from this date." />
           <Input label="End date" name="end_date" type="date" min={details.start_date || undefined} value={details.end_date} onChange={onDetail} error={errors.end_date} hint="Last day to apply." />
-          <Textarea label="Description" name="description" rows={5} value={details.description} onChange={onDetail} className="md:col-span-2" hint="Role summary, responsibilities and benefits." />
+          <Textarea label="Description" name="description" rows={4} value={details.description} onChange={onDetail} className="md:col-span-2" hint="Role summary, responsibilities and benefits." />
         </fieldset>
       </Card>
 
       {/* ---------------- 2. Requirements ---------------- */}
-      <Card className="flex flex-col gap-5 p-6">
+      <Card className="flex flex-col gap-4 p-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h2 className="text-xl font-bold">2. Requirements</h2>
-            <p className="mt-1 text-sm text-muted">Mark must-have requirements as mandatory. Weightage of all requirements must total 100%.</p>
+            <h2 className="flex items-center gap-2.5 text-base font-semibold"><span className="flex h-6 w-6 items-center justify-center rounded-full bg-brown text-xs text-cream">2</span>Requirements</h2>
+            <p className="mt-1 text-sm italic text-muted">Mark must-haves as mandatory. All weightages must total 100%.</p>
           </div>
           <div
-            className={`rounded-full px-4 py-2 text-sm font-semibold ${weightOk ? 'bg-success-soft text-success' : 'bg-cream text-brown'}`}
+            className={`rounded-full px-3.5 py-1.5 text-sm font-medium ${weightOk ? 'bg-success-soft text-success' : 'bg-cream text-brown'}`}
             aria-live="polite"
           >
             Total weightage: {totalWeight}%{weightOk ? ' ✓' : ' (must be 100%)'}
           </div>
         </div>
 
-        <fieldset disabled={reqLocked} className="flex flex-col gap-4">
+        <fieldset disabled={reqLocked} className="flex flex-col gap-3">
           <legend className="sr-only">Requirements</legend>
           {requirements.map((r, i) => {
             const e = errors.requirements?.[i] || {};
             return (
-              <div key={r.key} className="grid gap-3 rounded-xl border border-line bg-paper p-4 md:grid-cols-[150px_1fr_1fr_120px_auto] md:items-start">
-                <Select label="Type" value={r.req_type} onChange={(ev) => updateReq(r.key, { req_type: ev.target.value })} options={REQ_TYPES} />
-                <Input label="Name" placeholder="e.g. React" value={r.name} onChange={(ev) => updateReq(r.key, { name: ev.target.value })} error={e.name} />
-                <Input label="Minimum" placeholder={MIN_HINT[r.req_type]} value={r.min_value} onChange={(ev) => updateReq(r.key, { min_value: ev.target.value })} error={e.min_value} />
+              <div key={r.key} className="grid gap-3 rounded-xl border border-line bg-paper p-3 md:grid-cols-[140px_minmax(0,1fr)_minmax(0,1fr)_110px_auto] md:items-start">
+                <Select label="Type" value={r.req_type} onChange={(ev) => updateReq(r.key, { req_type: ev.target.value, min_value: validMin(ev.target.value, r.min_value) })} options={REQ_TYPES} />
+                <Input
+                  label="Name"
+                  placeholder={r.req_type === 'CERTIFICATION' ? 'e.g. AWS Cloud Practitioner' : r.req_type === 'QUALIFICATION' ? 'e.g. BS Computer Science' : 'e.g. React'}
+                  value={r.name}
+                  onChange={(ev) => updateReq(r.key, { name: ev.target.value })}
+                  error={e.name}
+                  className={r.req_type === 'CERTIFICATION' ? 'md:col-span-2' : ''}
+                />
+                {r.req_type !== 'CERTIFICATION' && (
+                  <Select
+                    label="Minimum"
+                    placeholder="Any level"
+                    options={minOptions(r.req_type, r.min_value)}
+                    value={r.min_value}
+                    onChange={(ev) => updateReq(r.key, { min_value: ev.target.value })}
+                    error={e.min_value}
+                  />
+                )}
                 <Input label="Weightage %" type="number" min="0" max="100" step="1" value={r.weightage} onChange={(ev) => updateReq(r.key, { weightage: ev.target.value })} error={e.weightage} />
-                <div className="flex items-center gap-2 md:pt-6">
+                <div className="flex items-center gap-1 md:pt-6">
                   <Checkbox label="Mandatory" checked={r.is_mandatory} onChange={(ev) => updateReq(r.key, { is_mandatory: ev.target.checked })} />
                   <Button variant="ghost" onClick={() => removeReq(r.key)} disabled={requirements.length === 1} aria-label={`Remove requirement ${i + 1}`}>
                     Remove
@@ -406,13 +430,13 @@ export default function VacancyEditor() {
       </Card>
 
       {/* ---------------- 3. Application form ---------------- */}
-      <Card className="flex flex-col gap-5 p-6">
+      <Card className="flex flex-col gap-4 p-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h2 className="text-xl font-bold">3. Application form</h2>
-            <p className="mt-1 text-sm text-muted">
-              A complete form: standard sections (personal details, education, experience, skills) plus questions for each requirement.
-              Adjust the wording, answer type, options and order, or add your own questions.
+            <h2 className="flex items-center gap-2.5 text-base font-semibold"><span className="flex h-6 w-6 items-center justify-center rounded-full bg-brown text-xs text-cream">3</span>Application form</h2>
+            <p className="mt-1 max-w-2xl text-sm italic text-muted">
+              Standard sections (personal, education, experience, skills) plus questions for each requirement.
+              Edit wording, answer type and order, or add your own questions.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -428,25 +452,25 @@ export default function VacancyEditor() {
         </div>
 
         {fields.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-line-strong bg-paper px-6 py-10 text-center text-sm text-muted">
+          <div className="rounded-xl border border-dashed border-line-strong bg-paper px-6 py-8 text-center text-sm text-muted">
             No form yet. Add requirements (total 100%), then click <span className="font-semibold text-brown">Generate form</span>.
           </div>
         ) : showPreview ? (
           <FormPreview fields={fields} title={details.title} />
         ) : (
-          <fieldset disabled={reqLocked} className="flex flex-col gap-3">
+          <fieldset disabled={reqLocked} className="flex flex-col gap-2.5">
             <legend className="sr-only">Form questions</legend>
             {fields.map((f, i) => {
               const showSection = i === 0 || fields[i - 1].section !== f.section;
               const canRemove = !CORE_KEYS.includes(f.field_key);
               return (
-                <div key={f.key} className="flex flex-col gap-3">
+                <div key={f.key} className="flex flex-col gap-2">
                   {showSection && (
-                    <h3 className="mt-2 text-sm font-bold uppercase tracking-[0.08em] text-muted">{SECTION_LABELS[f.section] || f.section}</h3>
+                    <h3 className="mt-3 text-xs font-semibold uppercase tracking-[0.1em] text-rust">{SECTION_LABELS[f.section] || f.section}</h3>
                   )}
-                  <div className="flex flex-col gap-3 rounded-xl border border-line bg-white p-4">
+                  <div className="flex flex-col gap-2.5 rounded-xl border border-line bg-white p-3">
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                      <span className={`rounded-full px-3 py-1 text-xs font-semibold ${f.requirement_id ? 'bg-cream text-brown' : 'bg-cream-soft text-muted'}`}>
+                      <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${f.requirement_id ? 'bg-cream text-brown' : 'bg-cream-soft text-muted'}`}>
                         Q{i + 1} · {f.requirement_id ? `Linked to ${reqName(f.requirement_id) || 'requirement'}` : f.is_standard ? 'Standard question' : 'Custom question'}
                       </span>
                       <div className="flex gap-1">
@@ -457,7 +481,7 @@ export default function VacancyEditor() {
                         )}
                       </div>
                     </div>
-                    <div className="grid gap-3 md:grid-cols-[1fr_220px_auto] md:items-end">
+                    <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_200px_auto] md:items-end">
                       <Input label="Question" value={f.label} maxLength={150} onChange={(e) => updateField(f.key, { label: e.target.value })} />
                       <Select label="Answer type" value={f.field_type} onChange={(e) => updateField(f.key, { field_type: e.target.value })} options={FIELD_TYPES} />
                       <Checkbox label="Required" checked={f.is_required} onChange={(e) => updateField(f.key, { is_required: e.target.checked })} />
@@ -484,8 +508,8 @@ export default function VacancyEditor() {
 
       {/* ---------------- Action bar ---------------- */}
       {!readOnly && (
-        <div className="sticky bottom-0 z-10 -mx-4 flex flex-wrap items-center justify-end gap-3 border-t border-line bg-paper/95 px-4 py-4 sm:-mx-8 sm:px-8">
-          {(dirty || formDirty) && <span className="mr-auto text-sm text-muted">You have unsaved changes.</span>}
+        <div className="sticky bottom-0 z-10 -mx-4 flex flex-wrap items-center justify-end gap-3 border-t border-line bg-paper/95 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6">
+          {(dirty || formDirty) && <span className="mr-auto text-sm italic text-muted">You have unsaved changes.</span>}
           <Button variant="secondary" onClick={onSave} loading={busy === 'save'} disabled={Boolean(busy) || (!dirty && !isNew)}>
             Save draft
           </Button>
@@ -506,13 +530,13 @@ function FormPreview({ fields, title }) {
     fields.map((f) => ({ ...f, options: CHOICE.includes(f.field_type) ? (f.optionsText || '').split(',').map((o) => o.trim()).filter(Boolean) : null }))
   );
   return (
-    <div className="rounded-xl border border-line bg-paper p-5 sm:p-6">
+    <div className="rounded-xl border border-line bg-paper p-5 sm:p-5">
       <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">Candidate view</p>
-      <h3 className="mt-1 text-lg font-bold">Apply for {title || 'this position'}</h3>
-      <form className="mt-5 flex flex-col gap-6" onSubmit={(e) => e.preventDefault()}>
+      <h3 className="mt-1 text-lg font-semibold">Apply for {title || 'this position'}</h3>
+      <form className="mt-5 flex flex-col gap-4" onSubmit={(e) => e.preventDefault()}>
         {groups.map((g, gi) => (
           <section key={`${g.section}-${gi}`} className="flex flex-col gap-4 rounded-xl border border-line bg-white p-5">
-            <h4 className="font-heading text-base font-bold">{g.label}</h4>
+            <h4 className="text-base font-semibold">{g.label}</h4>
             {g.fields.map((f) => (
               <FormFieldInput key={f.key} field={f} disabled />
             ))}

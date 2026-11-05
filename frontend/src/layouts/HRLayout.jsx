@@ -70,17 +70,32 @@ export default function HRLayout() {
           ))}
         </nav>
 
-        <div className="mt-auto flex items-center gap-3 border-t border-brown-light px-2 pt-4">
-          <Avatar name={user?.full_name} src={user?.profile_picture_url} size={40} />
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold text-cream">{user?.full_name}</p>
-            <p className="truncate text-xs text-line-strong">{user?.email}</p>
+        {/* Logout button, then the signed-in user (email at the very bottom) */}
+        <div className="mt-auto flex flex-col gap-3 border-t border-brown-light pt-4">
+          <LogoutButton className="flex min-h-10 w-full items-center justify-center rounded-[10px] border border-line-strong/60 text-sm font-medium text-cream transition-colors hover:border-amber hover:bg-amber hover:text-brown" />
+          <div className="flex items-center gap-3 rounded-xl bg-brown-light/70 p-3">
+            <Avatar name={user?.full_name} src={user?.profile_picture_url} size={38} />
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-semibold text-cream">{user?.full_name}</p>
+              <p className="truncate text-xs italic text-line-strong">{user?.email}</p>
+            </div>
           </div>
         </div>
-        <LogoutButton className="mt-2 min-h-11 rounded-[10px] px-3.5 text-left text-sm font-medium text-cream hover:bg-brown-light" />
       </aside>
 
-      <main className="min-w-0 flex-1 px-4 py-6 sm:px-8 sm:py-8">
+      {/* HR panel reads a little larger: text-xs = 13px, text-sm = 15px, form labels = 14px */}
+      <main
+        className="min-w-0 flex-1 overflow-x-clip px-4 py-5 sm:px-6 sm:py-6"
+        style={{
+          '--text-xs': '0.8125rem',
+          '--text-xs--line-height': '1.45',
+          '--text-sm': '0.9375rem',
+          '--text-sm--line-height': '1.5',
+          '--label-size': '14px',
+          '--field-h': '2.5rem',
+          '--btn-h': '2.5rem',
+        }}
+      >
         <Outlet />
       </main>
     </div>

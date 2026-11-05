@@ -20,7 +20,8 @@ strictly against the listed requirements of the vacancy "${row.vacancy_title}".
 Rules:
 - Judge each requirement only from the candidate's answers. Do not guess or invent facts.
 - Treat equivalent skills as the same (e.g. "JS" = "JavaScript", "ML" = "Machine Learning", "Postgres" = "PostgreSQL").
-- EXPERIENCE: compare the number of years with the minimum. Met only if years >= minimum.
+- SKILL: levels from low to high are None < Entry level < Medium < Expert. Met only if the candidate's level >= the minimum.
+- EXPERIENCE: compare the number of years with the minimum (Entry level = 0-2 years, Medium = 2-5 years, Expert = 5+ years; use the lower number). Met only if years >= minimum.
 - QUALIFICATION / CERTIFICATION: met if the answer is the same or clearly higher / equivalent.
 - If no minimum is given, met when the candidate clearly has it.
 - Ignore name, gender, city or anything not related to the requirements.

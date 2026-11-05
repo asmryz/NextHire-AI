@@ -29,7 +29,7 @@ export default function Button({
     <button
       type={type}
       disabled={disabled || loading}
-      className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-[10px] px-[18px] text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${VARIANTS[variant]} ${fullWidth ? 'w-full' : ''} ${className}`}
+      className={`inline-flex min-h-[var(--btn-h,2.75rem)] items-center justify-center gap-2 rounded-[10px] px-[18px] text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${VARIANTS[variant]} ${fullWidth ? 'w-full' : ''} ${className}`}
       {...props}
     >
       {loading && <Spinner size="sm" />}

@@ -6,7 +6,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api, { getErrorMessage } from '../../../services/api';
 import { useDepartments } from '../../../services/departments';
-import { Alert, Badge, Button, Card, ConfirmDialog, PageHeader, Select, Spinner } from '../../../components/ui';
+import { Alert, Badge, Button, ConfirmDialog, PageHeader, Select, Spinner } from '../../../components/ui';
 
 const STATUS_OPTIONS = [
   { value: 'DRAFT', label: 'Draft' },
@@ -15,7 +15,7 @@ const STATUS_OPTIONS = [
 ];
 
 const formatDate = (d) =>
-  d ? new Date(`${d}T00:00:00`).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
+  d ? new Date(`${d}T00:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
 
 export default function VacancyList() {
   const navigate = useNavigate();
@@ -91,7 +91,7 @@ export default function VacancyList() {
   const hasFilters = filters.search || filters.department_id || filters.status;
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4">
       <PageHeader
         title="Vacancies"
         subtitle="Create positions, set requirements and publish the application form."
@@ -102,16 +102,17 @@ export default function VacancyList() {
       <Alert type="error">{error}</Alert>
 
       {/* Filters */}
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr]">
-        <div className="flex flex-col gap-1.5">
+      <div className="grid gap-3 rounded-2xl border border-line bg-white p-3 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr]">
+        <div className="relative">
           <label htmlFor="vacancy-search" className="sr-only">Search vacancies</label>
+          <svg aria-hidden="true" viewBox="0 0 24 24" className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14zM21 21l-5-5" /></svg>
           <input
             id="vacancy-search"
             type="search"
             placeholder="Search by title or department"
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
-            className="h-11 w-full rounded-[10px] border border-line-strong bg-white px-3 text-sm text-brown focus:outline-none focus:ring-2 focus:ring-amber"
+            className="h-10 w-full rounded-[10px] border border-line-strong bg-white pl-9 pr-3 text-sm text-brown placeholder:text-muted/70 focus:outline-none focus:ring-2 focus:ring-amber"
           />
         </div>
         <Select
@@ -127,75 +128,81 @@ export default function VacancyList() {
       </div>
 
       {/* Table */}
-      <Card className="overflow-x-auto p-0">
+      <div className="overflow-hidden rounded-2xl border border-line bg-white">
         {loading ? (
-          <div className="flex justify-center py-16 text-rust"><Spinner label="Loading vacancies" /></div>
+          <div className="flex justify-center py-12 text-rust"><Spinner label="Loading vacancies" /></div>
         ) : vacancies.length === 0 ? (
-          <div className="flex flex-col items-center gap-3 px-6 py-16 text-center">
-            <p className="font-heading text-lg font-bold">{hasFilters ? 'No vacancies match your filters' : 'No vacancies yet'}</p>
-            <p className="text-sm text-muted">{hasFilters ? 'Try a different search or clear the filters.' : 'Create your first vacancy to start receiving applications.'}</p>
-            {hasFilters ? (
-              <Button variant="secondary" onClick={() => { setSearchText(''); setFilters({ search: '', department_id: '', status: '' }); }}>Clear filters</Button>
-            ) : (
-              <Button onClick={() => navigate('/hr/vacancies/new')}>+ New Vacancy</Button>
-            )}
+          <div className="flex flex-col items-center gap-2 px-6 py-12 text-center">
+            <p className="text-base font-semibold">{hasFilters ? 'No vacancies match your filters' : 'No vacancies yet'}</p>
+            <p className="text-sm italic text-muted">{hasFilters ? 'Try a different search or clear the filters.' : 'Create your first vacancy to start receiving applications.'}</p>
+            <div className="mt-2">
+              {hasFilters ? (
+                <Button variant="secondary" onClick={() => { setSearchText(''); setFilters({ search: '', department_id: '', status: '' }); }}>Clear filters</Button>
+              ) : (
+                <Button onClick={() => navigate('/hr/vacancies/new')}>+ New Vacancy</Button>
+              )}
+            </div>
           </div>
         ) : (
-          <table className="w-full min-w-[860px] border-collapse text-sm">
-            <thead>
-              <tr className="border-b-2 border-cream text-left text-xs uppercase tracking-[0.06em] text-muted">
-                <th scope="col" className="px-5 py-3.5 font-semibold">Position</th>
-                <th scope="col" className="px-4 py-3.5 font-semibold">Department</th>
-                <th scope="col" className="px-4 py-3.5 font-semibold">Applicants</th>
-                <th scope="col" className="px-4 py-3.5 font-semibold">Start date</th>
-                <th scope="col" className="px-4 py-3.5 font-semibold">End date</th>
-                <th scope="col" className="px-4 py-3.5 font-semibold">Status</th>
-                <th scope="col" className="px-5 py-3.5 text-right font-semibold">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {vacancies.map((v) => {
-                const canEdit = v.status === 'DRAFT' || v.status === 'OPEN';
-                const canDelete = v.applicants === 0;
-                return (
-                  <tr key={v.vacancy_id} className="border-t border-cream-soft">
-                    <td className="px-5 py-3.5 font-semibold">
-                      <Link to={`/hr/vacancies/${v.vacancy_id}`} className="hover:text-rust hover:underline">{v.title}</Link>
-                      {v.location && <span className="block text-xs font-normal text-muted">{v.location}</span>}
-                    </td>
-                    <td className="px-4 py-3.5">{v.department}</td>
-                    <td className="px-4 py-3.5">{v.applicants}</td>
-                    <td className="px-4 py-3.5 whitespace-nowrap">{formatDate(v.start_date)}</td>
-                    <td className="px-4 py-3.5 whitespace-nowrap">{formatDate(v.end_date)}</td>
-                    <td className="px-4 py-3.5"><Badge status={v.status} /></td>
-                    <td className="px-5 py-3.5">
-                      <div className="flex justify-end gap-1 whitespace-nowrap">
-                        <Link to={`/hr/vacancies/${v.vacancy_id}`} className="inline-flex min-h-11 items-center rounded-lg px-3 font-semibold hover:bg-cream-soft">
-                          {canEdit ? 'Edit' : 'View'}
-                        </Link>
-                        {canEdit && (
-                          <button type="button" onClick={() => setConfirm({ type: 'close', vacancy: v })} className="min-h-11 rounded-lg px-3 font-semibold hover:bg-cream-soft">
-                            Close
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[820px] border-collapse text-sm">
+              <thead>
+                <tr className="bg-paper text-left text-xs uppercase tracking-[0.06em] text-muted">
+                  <th scope="col" className="px-4 py-3 font-medium">Position</th>
+                  <th scope="col" className="px-4 py-3 font-medium">Department</th>
+                  <th scope="col" className="px-4 py-3 text-center font-medium">Applicants</th>
+                  <th scope="col" className="px-4 py-3 font-medium">Open from</th>
+                  <th scope="col" className="px-4 py-3 font-medium">Closes</th>
+                  <th scope="col" className="px-4 py-3 font-medium">Status</th>
+                  <th scope="col" className="px-4 py-3 text-right font-medium">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {vacancies.map((v) => {
+                  const canEdit = v.status === 'DRAFT' || v.status === 'OPEN';
+                  const canDelete = v.applicants === 0;
+                  return (
+                    <tr key={v.vacancy_id} className="border-t border-line transition-colors hover:bg-paper">
+                      <td className="px-4 py-3">
+                        <Link to={`/hr/vacancies/${v.vacancy_id}`} className="font-medium hover:text-rust">{v.title}</Link>
+                        {v.location && <span className="block text-xs italic text-muted">{v.location}</span>}
+                      </td>
+                      <td className="px-4 py-3 text-muted">{v.department}</td>
+                      <td className="px-4 py-3 text-center">
+                        <span className="inline-flex min-w-8 justify-center rounded-full bg-cream-soft px-2.5 py-0.5 font-medium">{v.applicants}</span>
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-3 text-muted">{formatDate(v.start_date)}</td>
+                      <td className="whitespace-nowrap px-4 py-3 text-muted">{formatDate(v.end_date)}</td>
+                      <td className="px-4 py-3"><Badge status={v.status} /></td>
+                      <td className="px-4 py-3">
+                        <div className="flex justify-end gap-1.5 whitespace-nowrap">
+                          <Link to={`/hr/vacancies/${v.vacancy_id}`} className="inline-flex h-8 items-center rounded-lg border border-line-strong px-3 text-xs font-medium hover:border-amber hover:bg-cream-soft">
+                            {canEdit ? 'Edit' : 'View'}
+                          </Link>
+                          {canEdit && (
+                            <button type="button" onClick={() => setConfirm({ type: 'close', vacancy: v })} className="h-8 rounded-lg border border-line-strong px-3 text-xs font-medium hover:border-amber hover:bg-cream-soft">
+                              Close
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => setConfirm({ type: 'delete', vacancy: v })}
+                            disabled={!canDelete}
+                            title={canDelete ? undefined : 'Has applications: close it instead'}
+                            className="h-8 rounded-lg border border-danger/30 px-3 text-xs font-medium text-danger hover:bg-danger-soft disabled:cursor-not-allowed disabled:border-line disabled:text-muted disabled:opacity-60 disabled:hover:bg-transparent"
+                          >
+                            Delete
                           </button>
-                        )}
-                        <button
-                          type="button"
-                          onClick={() => setConfirm({ type: 'delete', vacancy: v })}
-                          disabled={!canDelete}
-                          title={canDelete ? undefined : 'Has applications: close it instead'}
-                          className="min-h-11 rounded-lg px-3 font-semibold text-danger hover:bg-danger-soft disabled:cursor-not-allowed disabled:text-muted disabled:opacity-60 disabled:hover:bg-transparent"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         )}
-      </Card>
+      </div>
 
       {/* Pagination */}
       {pagination.pages > 1 && (

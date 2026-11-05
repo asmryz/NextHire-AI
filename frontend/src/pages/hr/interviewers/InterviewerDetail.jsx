@@ -34,10 +34,10 @@ export default function InterviewerDetail() {
   const { interviewer: i, interviews, feedback } = data;
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4">
       <Link to="/hr/interviewers" className="w-fit text-sm font-semibold text-muted hover:text-brown">← All interviewers</Link>
 
-      <Card className="flex flex-wrap items-center gap-5 p-6">
+      <Card className="flex flex-wrap items-center gap-4 p-5">
         <Avatar name={i.full_name} src={i.profile_picture_url} size={72} />
         <div className="min-w-[220px] flex-1">
           <div className="flex flex-wrap items-center gap-3">
@@ -55,7 +55,7 @@ export default function InterviewerDetail() {
       </Card>
 
       <Card className="overflow-x-auto p-0">
-        <h2 className="px-6 pt-5 text-xl font-bold">Assigned interviews</h2>
+        <h2 className="px-6 pt-5 text-lg font-semibold">Assigned interviews</h2>
         {interviews.length === 0 ? (
           <p className="px-6 pb-6 pt-2 text-sm text-muted">No interviews assigned yet.</p>
         ) : (
@@ -84,8 +84,8 @@ export default function InterviewerDetail() {
         )}
       </Card>
 
-      <Card className="p-6">
-        <h2 className="text-xl font-bold">Recorded feedback</h2>
+      <Card className="p-5">
+        <h2 className="text-lg font-semibold">Recorded feedback</h2>
         {feedback.length === 0 ? (
           <p className="mt-2 text-sm text-muted">No feedback recorded yet.</p>
         ) : (

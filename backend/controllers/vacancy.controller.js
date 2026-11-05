@@ -7,7 +7,7 @@
 //   let HR adjust it, then publish.
 const { pool } = require('../config/db');
 const { logAudit } = require('../utils/audit');
-const { FIELD_TYPES, CHOICE_TYPES, CORE_KEYS, buildForm } = require('../utils/formTemplate');
+const { FIELD_TYPES, CHOICE_TYPES, CORE_KEYS, MIN_LEVELS, buildForm } = require('../utils/formTemplate');
 
 const UNAVAILABLE = 'Vacancy could not be saved. Please try again.';
 const REQ_TYPES = ['SKILL', 'EXPERIENCE', 'QUALIFICATION', 'CERTIFICATION'];
@@ -111,7 +111,7 @@ function validateVacancyBody(body = {}) {
     requirements.push({
       req_type,
       name,
-      min_value,
+      min_value: req_type === 'CERTIFICATION' ? null : min_value,
       is_mandatory: Boolean(r.is_mandatory),
       weightage: Math.round(weightage * 100) / 100,
     });
@@ -119,6 +119,16 @@ function validateVacancyBody(body = {}) {
   if (reqErrors.length) errors.requirements = reqErrors;
 
   return { errors, data: { title, description, location, department_id, start_date, end_date, requirements } };
+}
+
+// Minimum must come from the dropdown (certifications have none). Checked only for NEW or CHANGED
+// requirements, so older vacancies saved with free-text minimums can still be edited.
+function minimumErrors(requirements) {
+  const list = [];
+  requirements.forEach((r, i) => {
+    if (r.min_value && !(MIN_LEVELS[r.req_type] || []).includes(r.min_value)) list[i] = { min_value: 'Choose a minimum level from the list.' };
+  });
+  return list.length ? { requirements: list } : null;
 }
 
 const sameRequirements = (a, b) =>
@@ -223,6 +233,8 @@ async function getVacancy(req, res) {
 async function createVacancy(req, res) {
   const { errors, data } = validateVacancyBody(req.body);
   if (Object.keys(errors).length) return sendErrors(res, errors);
+  const minErrors = minimumErrors(data.requirements);
+  if (minErrors) return sendErrors(res, minErrors);
 
   const client = await pool.connect();
   try {
@@ -279,6 +291,11 @@ async function updateVacancy(req, res) {
     let note = 'Vacancy updated.';
 
     if (requirementsChanged) {
+      const minErrors = minimumErrors(data.requirements);
+      if (minErrors) {
+        await client.query('ROLLBACK');
+        return sendErrors(res, minErrors);
+      }
       if (current.applicants > 0) {
         await client.query('ROLLBACK');
         return res.status(409).json({

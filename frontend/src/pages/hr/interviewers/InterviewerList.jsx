@@ -109,7 +109,7 @@ export default function InterviewerList() {
   };
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4">
       <PageHeader
         title="Interviewers"
         subtitle="Accounts for staff who only conduct interviews. They see only the interviews assigned to them."
@@ -138,8 +138,8 @@ export default function InterviewerList() {
 
       {/* Add form */}
       {showForm && (
-        <Card className="p-6">
-          <h2 className="text-xl font-bold">Add interviewer</h2>
+        <Card className="p-5">
+          <h2 className="text-lg font-semibold">Add interviewer</h2>
           <form onSubmit={onCreate} noValidate className="mt-4 grid gap-4 md:grid-cols-2">
             <Input label="Full name" name="full_name" value={form.full_name} onChange={onChange} error={errors.full_name} required />
             <Input label="Email" name="email" type="email" value={form.email} onChange={onChange} error={errors.email} required />
@@ -182,9 +182,9 @@ export default function InterviewerList() {
       {/* List */}
       <Card className="overflow-x-auto p-0">
         {loading ? (
-          <div className="flex justify-center py-16 text-rust"><Spinner label="Loading interviewers" /></div>
+          <div className="flex justify-center py-12 text-rust"><Spinner label="Loading interviewers" /></div>
         ) : list.length === 0 ? (
-          <div className="px-6 py-16 text-center">
+          <div className="px-6 py-12 text-center">
             <p className="font-heading text-lg font-bold">No interviewers yet</p>
             <p className="mt-1 text-sm text-muted">Add an interviewer so they can be assigned to interviews.</p>
           </div>
@@ -192,12 +192,12 @@ export default function InterviewerList() {
           <table className="w-full min-w-[760px] border-collapse text-sm">
             <thead>
               <tr className="border-b-2 border-cream text-left text-xs uppercase tracking-[0.06em] text-muted">
-                <th scope="col" className="px-5 py-3.5 font-semibold">Name</th>
-                <th scope="col" className="px-4 py-3.5 font-semibold">Department</th>
-                <th scope="col" className="px-4 py-3.5 font-semibold">Designation</th>
-                <th scope="col" className="px-4 py-3.5 font-semibold">Interviews</th>
-                <th scope="col" className="px-4 py-3.5 font-semibold">Status</th>
-                <th scope="col" className="px-5 py-3.5 text-right font-semibold">Actions</th>
+                <th scope="col" className="px-5 py-2.5 font-semibold">Name</th>
+                <th scope="col" className="px-4 py-2.5 font-semibold">Department</th>
+                <th scope="col" className="px-4 py-2.5 font-semibold">Designation</th>
+                <th scope="col" className="px-4 py-2.5 font-semibold">Interviews</th>
+                <th scope="col" className="px-4 py-2.5 font-semibold">Status</th>
+                <th scope="col" className="px-5 py-2.5 text-right font-semibold">Actions</th>
               </tr>
             </thead>
             <tbody>

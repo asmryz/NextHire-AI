@@ -1,5 +1,3 @@
-// backend/server.js
-// Owner: Aarian (shared file: new routes are added here with ONE line, tell your partner first)
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');

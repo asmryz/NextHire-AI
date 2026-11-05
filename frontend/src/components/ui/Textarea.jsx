@@ -7,7 +7,7 @@ export default function Textarea({ label, error, hint, required, rows = 4, class
   return (
     <div className={`flex flex-col gap-1.5 ${className}`}>
       {label && (
-        <label htmlFor={id} className="text-[13px] font-semibold text-brown">
+        <label htmlFor={id} className="text-[length:var(--label-size,13px)] font-medium text-brown">
           {label}
           {required && <span className="text-danger"> *</span>}
         </label>
@@ -24,9 +24,9 @@ export default function Textarea({ label, error, hint, required, rows = 4, class
         {...props}
       />
       {error ? (
-        <p id={`${id}-error`} className="text-[13px] text-danger">{error}</p>
+        <p id={`${id}-error`} className="text-[length:var(--label-size,13px)] text-danger">{error}</p>
       ) : hint ? (
-        <p id={`${id}-hint`} className="text-[13px] text-muted">{hint}</p>
+        <p id={`${id}-hint`} className="text-[length:var(--label-size,13px)] text-muted">{hint}</p>
       ) : null}
     </div>
   );

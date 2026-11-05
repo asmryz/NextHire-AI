@@ -7,7 +7,7 @@ export default function RadioGroup({ label, name, options = [], value, onChange,
   const id = useId();
   return (
     <fieldset className="flex flex-col gap-2" aria-describedby={error ? `${id}-error` : hint ? `${id}-hint` : undefined} disabled={disabled}>
-      <legend className="mb-1 text-[13px] font-medium text-brown">
+      <legend className="mb-1 text-[length:var(--label-size,13px)] font-medium text-brown">
         {label}
         {required && <span className="text-danger"> *</span>}
       </legend>
@@ -36,9 +36,9 @@ export default function RadioGroup({ label, name, options = [], value, onChange,
         })}
       </div>
       {error ? (
-        <p id={`${id}-error`} className="text-[13px] text-danger">{error}</p>
+        <p id={`${id}-error`} className="text-[length:var(--label-size,13px)] text-danger">{error}</p>
       ) : hint ? (
-        <p id={`${id}-hint`} className="text-[13px] text-muted">{hint}</p>
+        <p id={`${id}-hint`} className="text-[length:var(--label-size,13px)] text-muted">{hint}</p>
       ) : null}
     </fieldset>
   );

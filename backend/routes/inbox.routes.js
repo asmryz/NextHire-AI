@@ -9,7 +9,10 @@ const router = express.Router();
 router.use(verifyToken, requireRole('HR_ADMIN'));
 
 router.get('/', inbox.listInbox);
+router.get('/analytics', inbox.analytics);        // HR dashboard charts
 router.get('/vacancies', inbox.inboxVacancies);
 router.get('/:id', inbox.getApplication);
+router.put('/:id/referral', inbox.saveReferral);   // mark as referred by an employee
+router.delete('/:id/referral', inbox.removeReferral);
 
 module.exports = router;

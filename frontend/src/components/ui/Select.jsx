@@ -9,7 +9,7 @@ export default function Select({ label, error, options = [], placeholder, requir
   return (
     <div className={`flex flex-col gap-1.5 ${className}`}>
       {label && (
-        <label htmlFor={id} className={hideLabel ? 'sr-only' : 'text-[13px] font-semibold text-brown'}>
+        <label htmlFor={id} className={hideLabel ? 'sr-only' : 'text-[length:var(--label-size,13px)] font-medium text-brown'}>
           {label}
           {required && <span className="text-danger"> *</span>}
         </label>
@@ -19,7 +19,7 @@ export default function Select({ label, error, options = [], placeholder, requir
         required={required}
         aria-invalid={error ? 'true' : undefined}
         aria-describedby={error ? `${id}-error` : undefined}
-        className={`h-11 w-full rounded-[10px] border bg-white px-3 text-sm text-brown focus:outline-none focus:ring-2 focus:ring-amber ${
+        className={`h-[var(--field-h,2.75rem)] w-full rounded-[10px] border bg-white px-3 text-sm text-brown focus:outline-none focus:ring-2 focus:ring-amber ${
           error ? 'border-[1.5px] border-danger' : 'border-line-strong'
         }`}
         {...props}
@@ -29,7 +29,7 @@ export default function Select({ label, error, options = [], placeholder, requir
           <option key={o.value} value={o.value}>{o.label}</option>
         ))}
       </select>
-      {error && <p id={`${id}-error`} className="text-[13px] text-danger">{error}</p>}
+      {error && <p id={`${id}-error`} className="text-[length:var(--label-size,13px)] text-danger">{error}</p>}
     </div>
   );
 }
