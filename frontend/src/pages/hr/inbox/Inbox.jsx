@@ -138,7 +138,37 @@ export default function Inbox() {
             {(activeCount > 0 || filters.search) && <Button variant="secondary" onClick={clearAll}>Clear filters</Button>}
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <>
+          {/* Phones: one card per application */}
+          <ul className="divide-y divide-line md:hidden">
+            {applications.map((a) => (
+              <li key={a.application_id} className="flex flex-col gap-2.5 p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="font-medium">{a.candidate_name}</p>
+                    <p className="truncate text-xs italic text-muted">{a.candidate_email}</p>
+                  </div>
+                  <Badge status={a.stage} />
+                </div>
+                <p className="text-sm">
+                  {a.vacancy_title} <span className="text-xs italic text-muted">· {a.department} · {fmt(a.submitted_at)}</span>
+                </p>
+                <div className="flex flex-wrap items-center gap-2">
+                  {a.pending_evaluation ? <Badge status="PENDING" /> : (
+                    <>
+                      <span className="text-sm font-semibold">{Math.round(a.score)}%</span>
+                      {a.match_tag && <Badge status={a.match_tag} />}
+                    </>
+                  )}
+                  {a.possible_duplicate && <Badge tone="danger">Possible duplicate</Badge>}
+                  <Link to={`/hr/inbox/${a.application_id}`} className="ml-auto inline-flex h-8 items-center rounded-lg border border-line-strong px-3 text-xs font-medium hover:border-amber hover:bg-cream-soft active:bg-brown active:text-cream">
+                    Open
+                  </Link>
+                </div>
+              </li>
+            ))}
+          </ul>
+          <div className="relative hidden overflow-x-auto md:block">
           <table className="w-full border-collapse text-sm">
             <thead>
               <tr className="bg-paper text-left text-xs uppercase tracking-[0.06em] text-muted">
@@ -196,6 +226,7 @@ export default function Inbox() {
             </tbody>
           </table>
           </div>
+          </>
         )}
       </div>
 

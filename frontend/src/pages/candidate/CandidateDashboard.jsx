@@ -16,13 +16,6 @@ import { Badge, Button, Spinner } from '../../components/ui';
 import processingAnimation from '../../assets/application-processing.json';
 import searchAnimation from '../../assets/job-search.json';
 
-const STEPS = [
-  { icon: 'user', title: 'Complete your profile', text: 'Your details pre-fill every application.' },
-  { icon: 'file', title: 'Apply with a short form', text: 'Answer role questions. No CV upload.' },
-  { icon: 'sparkle', title: 'Fair AI-assisted screening', text: 'Only your answers are matched, never personal details.' },
-  { icon: 'briefcase', title: 'Interview and offer', text: 'Our HR team takes the final decision.' },
-];
-
 export default function CandidateDashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -57,7 +50,7 @@ export default function CandidateDashboard() {
             <h1 className="mt-1 text-[30px] font-semibold leading-tight tracking-tight sm:text-[40px]">{firstName || 'there'}.</h1>
             <p className="mt-3 max-w-lg text-[15px] leading-relaxed text-muted">
               {active
-                ? <>Your application for <span className="font-medium text-brown">{active.title}</span> is in progress. <em>We will email you at every step.</em></>
+                ? <>Your application for <span className="font-medium text-brown">{active.title}</span> is in progress. <em>We will email you and update your portal at every step.</em></>
                 : <>Find a role that fits you and apply in minutes. <em>No CV needed, just a short structured form.</em></>}
             </p>
 
@@ -110,7 +103,7 @@ export default function CandidateDashboard() {
                   <p className="mt-2 text-sm italic text-line-strong">
                     {openings?.pagination?.total ? `${openings.pagination.total} position${openings.pagination.total === 1 ? ' is' : 's are'} open right now.` : 'New positions are added regularly.'}
                   </p>
-                  <Link to="/candidate/vacancies" className="mt-3 inline-flex min-h-10 items-center gap-1.5 text-sm font-medium text-amber hover:underline">
+                  <Link to="/candidate/vacancies" className="mt-3 inline-flex h-10 items-center gap-1.5 rounded-[10px] bg-amber px-4 text-sm font-semibold text-brown transition-colors hover:bg-amber-dark active:bg-cream">
                     Explore positions <Icon name="arrow" />
                   </Link>
                 </div>
@@ -173,7 +166,7 @@ export default function CandidateDashboard() {
               <h2 className="text-xl font-semibold">Latest openings</h2>
               <p className="mt-1 text-sm text-muted">Positions you can apply for right now.</p>
             </div>
-            <Link to="/candidate/vacancies" className="inline-flex min-h-10 items-center gap-1.5 text-sm font-medium hover:text-rust">
+            <Link to="/candidate/vacancies" className="inline-flex h-10 items-center gap-1.5 rounded-[10px] border-[1.5px] border-brown bg-white px-4 text-sm font-semibold text-brown transition-colors hover:bg-cream-soft active:bg-brown active:text-cream">
               See all positions <Icon name="arrow" />
             </Link>
           </div>
@@ -190,25 +183,6 @@ export default function CandidateDashboard() {
           )}
         </section>
 
-        {/* ---------------- How hiring works ---------------- */}
-        <section className="rounded-3xl bg-white p-6 ring-1 ring-line sm:p-8">
-          <h2 className="text-xl font-semibold">How hiring works at NexHire</h2>
-          <p className="mt-1 text-sm italic text-muted">Simple, transparent and fair for every candidate.</p>
-          <ol className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {STEPS.map((s, i) => (
-              <li key={s.title} className="flex gap-4 lg:flex-col">
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-cream text-rust">
-                  <Icon name={s.icon} className="h-5 w-5" />
-                </span>
-                <div>
-                  <p className="text-xs text-muted">Step {i + 1}</p>
-                  <p className="font-medium">{s.title}</p>
-                  <p className="mt-1 text-sm text-muted">{s.text}</p>
-                </div>
-              </li>
-            ))}
-          </ol>
-        </section>
       </div>
     </div>
   );

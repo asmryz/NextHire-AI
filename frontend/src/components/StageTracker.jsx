@@ -1,14 +1,20 @@
 // frontend/src/components/StageTracker.jsx
 // Owner: Shivani
-// Application progress shown to the candidate: Applied -> Shortlisted -> Interview.
+// Application progress shown to the candidate: Applied -> Under review -> Interview.
+//   stage APPLIED      -> "Applied" done, "Under review" in progress
+//   stage SHORTLISTED  -> review done, "Interview" being arranged
+//   stage INTERVIEW    -> "Interview" in progress
 // Offer / Hired are not shown as steps; when reached, every step is complete and a note is shown.
 //   <StageTracker stage="SHORTLISTED" />          full tracker with labels
 //   <StageTracker stage="APPLIED" compact />       thin bar only (cards)
 const STEPS = [
-  { key: 'APPLIED', label: 'Applied', hint: 'Form received' },
-  { key: 'SHORTLISTED', label: 'Shortlisted', hint: 'Profile reviewed' },
-  { key: 'INTERVIEW', label: 'Interview', hint: 'Meet the team' },
+  { label: 'Applied', hint: 'Form received' },
+  { label: 'Under review', hint: 'Application review' },
+  { label: 'Interview', hint: 'Meet the team' },
 ];
+// Which step is "in progress" for each database stage
+const CURRENT = { APPLIED: 1, SHORTLISTED: 2, INTERVIEW: 2 };
+const CURRENT_HINT = { APPLIED: 'In progress', SHORTLISTED: 'Being arranged', INTERVIEW: 'In progress' };
 const AFTER = { OFFER: 'Great news: you have received an offer. HR will contact you with the details.', HIRED: 'Congratulations, you have been hired!' };
 
 export default function StageTracker({ stage, compact = false }) {
@@ -21,13 +27,13 @@ export default function StageTracker({ stage, compact = false }) {
   }
 
   const finished = Boolean(AFTER[stage]);
-  const current = finished ? STEPS.length : Math.max(0, STEPS.findIndex((s) => s.key === stage));
+  const current = finished ? STEPS.length : CURRENT[stage] ?? 1;
 
   if (compact) {
     return (
       <div className="flex gap-1.5" role="img" aria-label={`Progress: ${finished ? 'completed' : STEPS[current].label}`}>
         {STEPS.map((s, i) => (
-          <span key={s.key} className={`h-1.5 flex-1 rounded-full ${i < current ? 'bg-rust' : i === current ? 'bg-amber' : 'bg-cream'}`} />
+          <span key={s.label} className={`h-1.5 flex-1 rounded-full ${i < current ? 'bg-rust' : i === current ? 'bg-amber' : 'bg-cream'}`} />
         ))}
       </div>
     );
@@ -40,7 +46,7 @@ export default function StageTracker({ stage, compact = false }) {
           const done = i < current;
           const isCurrent = i === current;
           return (
-            <li key={s.key} aria-current={isCurrent ? 'step' : undefined} className="relative flex flex-col items-center gap-2 text-center">
+            <li key={s.label} aria-current={isCurrent ? 'step' : undefined} className="relative flex flex-col items-center gap-2 text-center">
               {/* connector to the next step */}
               {i < STEPS.length - 1 && (
                 <span aria-hidden="true" className="absolute left-1/2 top-[15px] h-[3px] w-full bg-cream">
@@ -60,7 +66,7 @@ export default function StageTracker({ stage, compact = false }) {
                 </span>
               </span>
               <span className={`text-[13px] sm:text-sm ${done || isCurrent ? 'font-medium text-brown' : 'text-muted'}`}>{s.label}</span>
-              <span className="hidden text-xs italic text-muted sm:block">{isCurrent ? 'In progress' : done ? 'Done' : s.hint}</span>
+              <span className="hidden text-xs italic text-muted sm:block">{isCurrent ? CURRENT_HINT[stage] || 'In progress' : done ? 'Done' : s.hint}</span>
             </li>
           );
         })}

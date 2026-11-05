@@ -45,8 +45,11 @@ export default function VacancyCard({ vacancy: v, disabled = false, index = 0 })
 
       <div aria-hidden="true" className="min-h-5 flex-1" />
       <div className="relative z-10 flex items-center justify-between gap-2 border-t border-line pt-4">
-        <Link to={`/candidate/vacancies/${v.vacancy_id}`} className="inline-flex min-h-10 items-center gap-1.5 text-sm font-medium hover:text-rust">
-          View details <Icon name="arrow" className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+        <Link
+          to={`/candidate/vacancies/${v.vacancy_id}`}
+          className="inline-flex h-10 items-center gap-1.5 rounded-[10px] border-[1.5px] border-brown bg-white px-4 text-sm font-semibold text-brown transition-colors hover:bg-cream-soft active:bg-brown active:text-cream"
+        >
+          View details <Icon name="arrow" className="h-4 w-4" />
         </Link>
         {v.has_applied ? null : (
           <Button className="min-h-10 px-4" disabled={disabled} onClick={() => navigate(`/candidate/vacancies/${v.vacancy_id}`)}>Apply</Button>

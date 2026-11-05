@@ -7,6 +7,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import api, { getErrorMessage } from '../../services/api';
 import StageTracker from '../../components/StageTracker';
 import Icon from '../../components/candidate/Icon';
+import BackButton from '../../components/candidate/BackButton';
 import ProgressRing from '../../components/candidate/ProgressRing';
 import { closingLabel, fmtDate, initials } from '../../components/candidate/helpers';
 import { Alert, Badge, Button, Spinner } from '../../components/ui';
@@ -17,12 +18,6 @@ const TYPE = {
   QUALIFICATION: { label: 'Qualification', icon: 'layers' },
   CERTIFICATION: { label: 'Certification', icon: 'shield' },
 };
-
-const HOW = [
-  { icon: 'file', title: 'Structured answers', text: 'Everyone answers the same questions for this role.' },
-  { icon: 'sparkle', title: 'AI-assisted matching', text: 'Your answers are matched against the requirements below.' },
-  { icon: 'shield', title: 'Fair by design', text: 'Name, gender, CNIC and city are never used for scoring.' },
-];
 
 function RequirementList({ title, list }) {
   if (!list.length) return null;
@@ -88,9 +83,7 @@ export default function VacancyDetail() {
       <section className="relative overflow-hidden bg-cream">
         <span aria-hidden="true" className="absolute -right-16 -top-20 h-64 w-64 rounded-full bg-amber/20 blur-2xl" />
         <div className="relative mx-auto flex max-w-7xl flex-col gap-4 px-4 py-10 sm:px-8 lg:py-12">
-          <Link to="/candidate/vacancies" className="inline-flex w-fit items-center gap-1.5 text-sm text-muted hover:text-brown">
-            <Icon name="back" /> All positions
-          </Link>
+          <BackButton to="/candidate/vacancies">All positions</BackButton>
           <div className="flex animate-fade-up items-start gap-4">
             <span aria-hidden="true" className="hidden h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white text-lg font-semibold text-rust sm:flex">
               {initials(v.department)}
@@ -134,20 +127,6 @@ export default function VacancyDetail() {
             <RequirementList title="Good to have" list={optional} />
           </section>
 
-          <section className="animate-fade-up rounded-3xl bg-brown p-6 text-cream [animation-delay:160ms] sm:p-8">
-            <h2 className="text-lg font-semibold text-cream">How your application is evaluated</h2>
-            <ul className="mt-5 grid gap-5 sm:grid-cols-3">
-              {HOW.map((h) => (
-                <li key={h.title} className="flex gap-3 sm:flex-col">
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brown-light text-amber"><Icon name={h.icon} className="h-5 w-5" /></span>
-                  <span>
-                    <span className="block font-medium text-cream">{h.title}</span>
-                    <span className="mt-1 block text-sm text-line-strong">{h.text}</span>
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </section>
         </div>
 
         {/* ---------------- Apply panel ---------------- */}

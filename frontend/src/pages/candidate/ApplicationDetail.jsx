@@ -8,11 +8,13 @@ import StageTracker from '../../components/StageTracker';
 import LottiePlayer from '../../components/LottiePlayer';
 import { SECTION_LABELS } from '../../components/FormFieldInput';
 import Icon from '../../components/candidate/Icon';
+import BackButton from '../../components/candidate/BackButton';
 import { STAGE_TEXT, fmtDate, fmtDateTime } from '../../components/candidate/helpers';
 import { Alert, Badge, Spinner } from '../../components/ui';
 import processingAnimation from '../../assets/application-processing.json';
 
 const LABEL = { APPLIED: 'Application submitted', SHORTLISTED: 'Shortlisted', INTERVIEW: 'Interview stage', OFFER: 'Offer made', HIRED: 'Hired', REJECTED: 'Not successful' };
+const STATUS = { ...LABEL, APPLIED: 'Under review', SHORTLISTED: 'Shortlisted for interview' };
 const WIDE = ['TEXTAREA', 'LIST'];
 
 function groupAnswers(answers) {
@@ -57,9 +59,7 @@ export default function ApplicationDetail() {
       <section className="relative overflow-hidden bg-cream">
         <span aria-hidden="true" className="absolute -right-16 -top-20 h-64 w-64 rounded-full bg-amber/20 blur-2xl" />
         <div className="relative mx-auto flex max-w-7xl flex-col gap-4 px-4 py-10 sm:px-8">
-          <Link to="/candidate/applications" className="inline-flex w-fit items-center gap-1.5 text-sm text-muted hover:text-brown">
-            <Icon name="back" /> My applications
-          </Link>
+          <BackButton to="/candidate/applications">My applications</BackButton>
           <div className="flex animate-fade-up flex-wrap items-end justify-between gap-4">
             <div className="min-w-0">
               <p className="text-sm text-muted">{a.department}</p>
@@ -115,7 +115,7 @@ export default function ApplicationDetail() {
           <section className="animate-fade-up rounded-3xl bg-brown p-6 text-cream">
             {reviewing && <LottiePlayer data={processingAnimation} className="mx-auto w-36" />}
             <p className="mt-2 text-xs uppercase tracking-[0.1em] text-amber">Current status</p>
-            <p className="mt-1 text-lg font-semibold text-cream">{LABEL[a.stage] || a.stage}</p>
+            <p className="mt-1 text-lg font-semibold text-cream">{STATUS[a.stage] || a.stage}</p>
             <p className="mt-2 text-sm italic text-line-strong">{STAGE_TEXT[a.stage]}</p>
           </section>
 

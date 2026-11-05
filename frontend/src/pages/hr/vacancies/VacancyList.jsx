@@ -144,7 +144,34 @@ export default function VacancyList() {
             </div>
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <>
+          {/* Phones: one card per vacancy */}
+          <ul className="divide-y divide-line md:hidden">
+            {vacancies.map((v) => {
+              const canEdit = v.status === 'DRAFT' || v.status === 'OPEN';
+              return (
+                <li key={v.vacancy_id} className="flex flex-col gap-2 p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <Link to={`/hr/vacancies/${v.vacancy_id}`} className="font-medium hover:text-rust">{v.title}</Link>
+                      <p className="text-xs italic text-muted">{v.department}{v.location ? ` · ${v.location}` : ''}</p>
+                    </div>
+                    <Badge status={v.status} />
+                  </div>
+                  <p className="text-xs text-muted">{v.applicants} applicant{v.applicants === 1 ? '' : 's'} · {formatDate(v.start_date)} – {formatDate(v.end_date)}</p>
+                  <div className="flex gap-1.5">
+                    <Link to={`/hr/vacancies/${v.vacancy_id}`} className="inline-flex h-8 items-center rounded-lg border border-line-strong px-3 text-xs font-medium hover:border-amber hover:bg-cream-soft">{canEdit ? 'Edit' : 'View'}</Link>
+                    {canEdit && (
+                      <button type="button" onClick={() => setConfirm({ type: 'close', vacancy: v })} className="h-8 rounded-lg border border-line-strong px-3 text-xs font-medium hover:border-amber hover:bg-cream-soft">Close</button>
+                    )}
+                    <button type="button" onClick={() => setConfirm({ type: 'delete', vacancy: v })} disabled={v.applicants > 0}
+                      className="h-8 rounded-lg border border-danger/30 px-3 text-xs font-medium text-danger hover:bg-danger-soft disabled:cursor-not-allowed disabled:border-line disabled:text-muted disabled:opacity-60">Delete</button>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+          <div className="relative hidden overflow-x-auto md:block">
             <table className="w-full min-w-[820px] border-collapse text-sm">
               <thead>
                 <tr className="bg-paper text-left text-xs uppercase tracking-[0.06em] text-muted">
@@ -201,6 +228,7 @@ export default function VacancyList() {
               </tbody>
             </table>
           </div>
+          </>
         )}
       </div>
 
