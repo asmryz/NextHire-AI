@@ -10,6 +10,7 @@
 const { pool } = require('../config/db');
 const { logAudit } = require('../utils/audit');
 const { sendApplicationConfirmation } = require('../utils/applicationEmails');
+const { getProfileStatus, PROFILE_INCOMPLETE_MESSAGE } = require('../utils/profile');
 
 const MAX_ANSWER = 2000;
 const URL_RE = /^https?:\/\/[^\s.]+\.[^\s]{2,}$/i;
@@ -126,6 +127,13 @@ async function applyToVacancy(req, res) {
     if (!vac.rows[0].is_open_now) {
       await client.query('ROLLBACK');
       return res.status(409).json({ message: 'This vacancy is no longer accepting applications.' });
+    }
+
+    // The profile must be 100% complete before applying
+    const profile = await getProfileStatus(client, candidateId);
+    if (profile.completeness < 100) {
+      await client.query('ROLLBACK');
+      return res.status(409).json({ message: PROFILE_INCOMPLETE_MESSAGE, code: 'PROFILE_INCOMPLETE', missing: profile.missing });
     }
 
     const already = await client.query(

@@ -7,7 +7,7 @@ export default function RadioGroup({ label, name, options = [], value, onChange,
   const id = useId();
   return (
     <fieldset className="flex flex-col gap-2" aria-describedby={error ? `${id}-error` : hint ? `${id}-hint` : undefined} disabled={disabled}>
-      <legend className="mb-1 text-[13px] font-semibold text-brown">
+      <legend className="mb-1 text-[13px] font-medium text-brown">
         {label}
         {required && <span className="text-danger"> *</span>}
       </legend>
@@ -18,7 +18,7 @@ export default function RadioGroup({ label, name, options = [], value, onChange,
             <label
               key={opt}
               className={`inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-[10px] border px-3.5 text-sm ${
-                checked ? 'border-amber bg-cream-soft font-semibold' : 'border-line-strong bg-white'
+                checked ? 'border-amber bg-cream-soft font-medium' : 'border-line-strong bg-white'
               } ${disabled ? 'cursor-not-allowed opacity-70' : 'hover:border-amber'}`}
             >
               <input

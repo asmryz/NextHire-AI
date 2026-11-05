@@ -18,7 +18,17 @@ const SECTIONS = {
   CLOSING: 'Anything else',
 };
 
-const LEVELS = ['None', 'Beginner', 'Intermediate', 'Advanced', 'Expert'];
+// Candidate's own level (skill questions)
+const LEVELS = ['None', 'Entry level', 'Medium', 'Expert'];
+
+// The "Minimum" HR can choose per requirement type (dropdown in the vacancy editor).
+// Certifications have no minimum: the candidate either holds it or not.
+const MIN_LEVELS = {
+  SKILL: ['Entry level', 'Medium', 'Expert'],
+  EXPERIENCE: ['Entry level (0-2 years)', 'Medium (2-5 years)', 'Expert (5+ years)'],
+  QUALIFICATION: ['Entry level', 'Medium', 'Expert'],
+  CERTIFICATION: [],
+};
 
 // key, label, type, required, options, help
 const STANDARD_FIELDS = [
@@ -27,8 +37,8 @@ const STANDARD_FIELDS = [
   { section: 'PERSONAL', field_key: 'email', label: 'Email address', field_type: 'EMAIL', is_required: true },
   { section: 'PERSONAL', field_key: 'phone', label: 'Phone number', field_type: 'PHONE', is_required: true, help_text: 'e.g. 03001234567' },
   { section: 'PERSONAL', field_key: 'cnic', label: 'CNIC', field_type: 'TEXT', is_required: true, help_text: 'Format: XXXXX-XXXXXXX-X' },
-  { section: 'PERSONAL', field_key: 'gender', label: 'Gender', field_type: 'RADIO', is_required: false,
-    options: ['Male', 'Female', 'Prefer not to say'], help_text: 'Optional. Never used for scoring.' },
+  { section: 'PERSONAL', field_key: 'gender', label: 'Gender', field_type: 'RADIO', is_required: true,
+    options: ['Male', 'Female', 'Other'] },
   { section: 'PERSONAL', field_key: 'city', label: 'Current city', field_type: 'TEXT', is_required: true },
 
   // ---- Education
@@ -68,22 +78,22 @@ const CORE_KEYS = ['full_name', 'email', 'phone', 'cnic'];
 function requirementFields(r) {
   const main = { section: 'ROLE', requirement_id: r.requirement_id, is_required: true };
   const extra = { section: 'ROLE', requirement_id: r.requirement_id, is_required: false };
-  const min = r.min_value ? ` (minimum: ${r.min_value})` : '';
+  const required = r.min_value ? `Required level: ${r.min_value}` : null;
   switch (r.req_type) {
     case 'SKILL':
       return [
-        { ...main, label: `Your level in ${r.name}`, field_type: 'RADIO', options: LEVELS, help_text: r.min_value ? `Required level: ${r.min_value}` : null },
+        { ...main, label: `Your level in ${r.name}`, field_type: 'RADIO', options: LEVELS, help_text: required },
         { ...extra, label: `Years of experience with ${r.name}`, field_type: 'NUMBER' },
         { ...extra, label: `Describe a project or task where you used ${r.name}`, field_type: 'TEXTAREA' },
       ];
     case 'EXPERIENCE':
       return [
-        { ...main, label: `Years of experience in ${r.name}${min}`, field_type: 'NUMBER' },
+        { ...main, label: `Years of experience in ${r.name}`, field_type: 'NUMBER', help_text: required },
         { ...extra, label: `Describe your ${r.name} experience (roles, responsibilities)`, field_type: 'TEXTAREA' },
       ];
     case 'QUALIFICATION':
       return [
-        { ...main, label: `Do you have ${r.name} or a higher qualification?`, field_type: 'RADIO', options: ['Yes', 'No', 'Currently studying'] },
+        { ...main, label: `Do you have ${r.name} or a higher qualification?`, field_type: 'RADIO', options: ['Yes', 'No', 'Currently studying'], help_text: required },
         { ...extra, label: 'Degree name, institute and year', field_type: 'TEXT' },
       ];
     case 'CERTIFICATION':
@@ -116,6 +126,8 @@ module.exports = {
   FIELD_TYPES,
   CHOICE_TYPES,
   SECTIONS,
+  LEVELS,
+  MIN_LEVELS,
   STANDARD_FIELDS,
   NOT_FOR_AI,
   CORE_KEYS,

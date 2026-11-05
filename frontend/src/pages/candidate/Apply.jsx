@@ -7,10 +7,12 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import api, { getErrorMessage } from '../../services/api';
 import { Alert, Button, Card, Input, Spinner } from '../../components/ui';
 import FormFieldInput, { groupBySection } from '../../components/FormFieldInput';
+import LottiePlayer from '../../components/LottiePlayer';
+import successAnimation from '../../assets/success-check.json';
 
 const URL_RE = /^https?:\/\/[^\s.]+\.[^\s]{2,}$/i;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-const GENDER = { MALE: 'Male', FEMALE: 'Female', OTHER: 'Prefer not to say' };
+const GENDER = { MALE: 'Male', FEMALE: 'Female', OTHER: 'Other' };
 
 // Answers taken from the candidate's profile (SRS: profile details pre-fill applications)
 function prefill(fields, profile) {
@@ -119,10 +121,10 @@ export default function Apply() {
   if (done) {
     return (
       <div className="mx-auto flex max-w-2xl flex-col items-center gap-4 px-4 py-16 text-center sm:px-10">
-        <span aria-hidden="true" className="flex h-16 w-16 items-center justify-center rounded-full bg-success-soft text-3xl text-success">✓</span>
-        <h1 className="text-3xl font-extrabold tracking-tight">Application submitted</h1>
+        <LottiePlayer data={successAnimation} loop={false} className="w-40" />
+        <h1 className="text-3xl font-semibold tracking-tight">Application submitted</h1>
         <p className="text-sm text-muted">
-          {done.message} You applied for <span className="font-semibold text-brown">{v.title}</span>. Reference #{done.application_id}.
+          {done.message} You applied for <span className="font-medium text-brown">{v.title}</span>.
         </p>
         <div className="flex flex-wrap justify-center gap-3">
           <Button onClick={() => navigate(`/candidate/applications/${done.application_id}`)}>View my application</Button>
@@ -138,7 +140,7 @@ export default function Apply() {
         <div className="mx-auto flex max-w-3xl flex-col gap-2 px-4 py-8 sm:px-10">
           <Link to={`/candidate/vacancies/${v.vacancy_id}`} className="w-fit text-sm font-semibold text-muted hover:text-brown">← Back to vacancy</Link>
           <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">{v.department}</p>
-          <h1 className="text-3xl font-extrabold tracking-tight">Apply for {v.title}</h1>
+          <h1 className="text-3xl font-semibold tracking-tight">Apply for {v.title}</h1>
           <p className="text-sm text-muted">Answer the questions below. Fields marked * are required. No CV upload is needed.</p>
         </div>
       </section>
@@ -147,7 +149,12 @@ export default function Apply() {
         {!canApply ? (
           <>
             <Alert type="info">{reason}</Alert>
-            <div><Button variant="secondary" onClick={() => navigate('/candidate/vacancies')}>Browse other positions</Button></div>
+            <div className="flex flex-wrap gap-3">
+              {data.profile && data.profile.completeness < 100 && (
+                <Button onClick={() => navigate('/candidate/profile')}>Complete my profile</Button>
+              )}
+              <Button variant="secondary" onClick={() => navigate('/candidate/vacancies')}>Browse other positions</Button>
+            </div>
           </>
         ) : (
           <Card className="p-6">
@@ -155,7 +162,7 @@ export default function Apply() {
             <form onSubmit={onSubmit} noValidate className="flex flex-col gap-5">
               {groupBySection(v.form_fields).map((g, gi) => (
                 <section key={`${g.section}-${gi}`} className="flex flex-col gap-4 border-b border-line pb-6 last:border-0">
-                  <h2 className="font-heading text-lg font-bold">{g.label}</h2>
+                  <h2 className="text-lg font-semibold">{g.label}</h2>
                   {g.fields.map((f) => (
                     <FormFieldInput
                       key={f.field_id}

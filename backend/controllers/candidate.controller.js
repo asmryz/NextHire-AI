@@ -8,8 +8,9 @@
 const { pool } = require('../config/db');
 const { uploadProfilePicture, deleteImage } = require('../utils/cloudinary');
 const { isPhone, cleanPhone } = require('../utils/validators');
+const { profileStatus, getProfileStatus, PROFILE_INCOMPLETE_MESSAGE } = require('../utils/profile');
 
-const GENDERS = ['MALE', 'FEMALE', 'OTHER', 'NOT_SPECIFIED'];
+const GENDERS = ['MALE', 'FEMALE', 'OTHER']; // required (NOT_SPECIFIED is only for old rows)
 const toInt = (v) => {
   const n = Number.parseInt(v, 10);
   return Number.isFinite(n) && n > 0 ? n : null;
@@ -30,12 +31,13 @@ async function loadProfile(userId) {
   );
   const p = rows[0];
   if (!p) return null;
-  const fields = [p.full_name, p.phone, p.address, p.city, p.highest_qualification, p.profile_picture_url];
+  const { completeness, missing } = profileStatus(p);
   return {
     ...p,
     cnic: formatCnic(p.cnic),
-    gender: p.gender || 'NOT_SPECIFIED',
-    completeness: Math.round((fields.filter(Boolean).length / fields.length) * 100),
+    gender: p.gender && p.gender !== 'NOT_SPECIFIED' ? p.gender : '',
+    completeness,
+    missing, // labels of empty fields, e.g. ['City', 'Profile picture']
   };
 }
 
@@ -62,12 +64,16 @@ async function updateProfile(req, res) {
   const address = b.address ? String(b.address).trim() : null;
   const city = b.city ? String(b.city).trim() : null;
   const qualification = b.highest_qualification ? String(b.highest_qualification).trim() : null;
-  const gender = GENDERS.includes(b.gender) ? b.gender : 'NOT_SPECIFIED';
+  const gender = GENDERS.includes(b.gender) ? b.gender : null;
 
   if (!fullName) errors.full_name = 'This field is required.';
   else if (fullName.length > 100) errors.full_name = 'Name must be 100 characters or fewer.';
   if (!phone) errors.phone = 'This field is required.';
   else if (!isPhone(phone)) errors.phone = 'Please enter a valid phone number.';
+  if (!gender) errors.gender = 'Please select your gender.';
+  if (!city) errors.city = 'This field is required.';
+  if (!address) errors.address = 'This field is required.';
+  if (!qualification) errors.highest_qualification = 'This field is required.';
   if (address && address.length > 255) errors.address = 'Address must be 255 characters or fewer.';
   if (city && city.length > 60) errors.city = 'City must be 60 characters or fewer.';
   if (qualification && qualification.length > 100) errors.highest_qualification = 'Must be 100 characters or fewer.';
@@ -161,7 +167,7 @@ async function listOpenVacancies(req, res) {
   const limit = Math.min(toInt(req.query.limit) || 9, 30);
 
   try {
-    const [list, active] = await Promise.all([
+    const [list, active, profile] = await Promise.all([
       pool.query(
         `SELECT v.vacancy_id, v.title, v.location, d.name AS department, v.department_id,
                 LEFT(COALESCE(v.description, ''), 180) AS summary,
@@ -179,12 +185,14 @@ async function listOpenVacancies(req, res) {
         [req.user.user_id, search, departmentId, limit, (page - 1) * limit]
       ),
       findActiveApplication(req.user.user_id),
+      getProfileStatus(pool, req.user.user_id),
     ]);
 
     const total = list.rows[0]?.total_count || 0;
     return res.json({
       vacancies: list.rows.map(({ total_count, ...v }) => v),
       active_application: active,
+      profile_completeness: profile.completeness,
       pagination: { page, limit, total, pages: Math.max(1, Math.ceil(total / limit)) },
     });
   } catch (err) {
@@ -211,7 +219,7 @@ async function getOpenVacancy(req, res) {
     const vacancy = rows[0];
     if (!vacancy) return res.status(404).json({ message: 'Vacancy not found.' });
 
-    const [reqs, fields, applied, active] = await Promise.all([
+    const [reqs, fields, applied, active, profile] = await Promise.all([
       // Weightage is internal to HR and is not shown to candidates
       pool.query(
         `SELECT requirement_id, req_type, name, min_value, is_mandatory
@@ -229,6 +237,7 @@ async function getOpenVacancy(req, res) {
         [id, req.user.user_id]
       ),
       findActiveApplication(req.user.user_id),
+      getProfileStatus(pool, req.user.user_id),
     ]);
 
     const myApplication = applied.rows[0] || null;
@@ -243,6 +252,9 @@ async function getOpenVacancy(req, res) {
     } else if (active) {
       canApply = false;
       reason = 'You already have an active application. You can apply for another vacancy once it is closed.';
+    } else if (profile.completeness < 100) {
+      canApply = false;
+      reason = PROFILE_INCOMPLETE_MESSAGE;
     }
 
     return res.json({
@@ -250,6 +262,7 @@ async function getOpenVacancy(req, res) {
       my_application: myApplication,
       can_apply: canApply,
       reason,
+      profile: { completeness: profile.completeness, missing: profile.missing },
     });
   } catch (err) {
     console.error('getOpenVacancy:', err);
