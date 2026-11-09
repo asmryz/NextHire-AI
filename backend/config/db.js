@@ -1,6 +1,13 @@
 // backend/config/db.js
 // Owner: Aarian
 // Neon PostgreSQL connection pool. Use `pool.query(...)` everywhere.
+//
+// Neon suspends the database after a few idle minutes and closes open connections.
+// Without the handling below, the first request after a pause failed ("Something went wrong")
+// or even crashed the backend, and only the 2nd/3rd login worked. Now:
+//   - closed idle connections are logged, not fatal (pool 'error' handler)
+//   - idle connections are dropped before Neon drops them
+//   - a query that hits a dropped connection / waking database is retried once
 require('dotenv').config();
 const { Pool } = require('pg');
 
@@ -8,7 +15,34 @@ const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: true },
   max: 10,
+  idleTimeoutMillis: 10000,       // close our idle connections after 10 s
+  connectionTimeoutMillis: 15000, // give a sleeping Neon database time to wake up
+  keepAlive: true,
 });
+
+// An idle connection closed by Neon: just log it, the pool opens a new one next time
+pool.on('error', (err) => {
+  console.warn('Neon: idle connection closed, will reconnect.', err.message);
+});
+
+const TRANSIENT_CODES = ['ECONNRESET', 'ETIMEDOUT', 'EPIPE', 'ECONNREFUSED', '57P01', '57P02', '57P03', '08000', '08001', '08003', '08006'];
+function isTransient(err) {
+  const msg = String(err?.message || '');
+  return TRANSIENT_CODES.includes(err?.code) || /Connection terminated|connection timeout|timeout exceeded|Client has encountered a connection error/i.test(msg);
+}
+
+// pool.query with one automatic retry for connection problems
+const rawQuery = pool.query.bind(pool);
+pool.query = async (...args) => {
+  try {
+    return await rawQuery(...args);
+  } catch (err) {
+    if (!isTransient(err)) throw err;
+    console.warn('Neon: connection problem, retrying once:', err.code || err.message);
+    await new Promise((r) => setTimeout(r, 500));
+    return rawQuery(...args);
+  }
+};
 
 async function testConnection() {
   try {
@@ -20,4 +54,4 @@ async function testConnection() {
   }
 }
 
-module.exports = { pool, testConnection };
+module.exports = { pool, testConnection, isTransient };
