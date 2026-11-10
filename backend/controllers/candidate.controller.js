@@ -15,7 +15,7 @@ const toInt = (v) => {
   const n = Number.parseInt(v, 10);
   return Number.isFinite(n) && n > 0 ? n : null;
 };
-// 4210112345671 -> 42101-1234567-1
+
 const formatCnic = (c) => (c && c.length === 13 ? `${c.slice(0, 5)}-${c.slice(5, 12)}-${c.slice(12)}` : c);
 
 // ================================================================ PROFILE
@@ -55,7 +55,6 @@ async function getProfile(req, res) {
 
 // PUT /api/candidate/profile
 // Body: full_name, phone, address, city, gender, highest_qualification
-// (Email and CNIC are identity fields and cannot be changed here.)
 async function updateProfile(req, res) {
   const b = req.body || {};
   const errors = {};
