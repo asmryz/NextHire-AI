@@ -21,7 +21,7 @@ const REQ_TYPES = [
   { value: 'QUALIFICATION', label: 'Qualification' },
   { value: 'CERTIFICATION', label: 'Certification' },
 ];
-// Same lists as backend/utils/formTemplate.js (MIN_LEVELS). Certifications have no minimum.
+
 const MIN_LEVELS = {
   SKILL: ['Entry level', 'Medium', 'Expert'],
   EXPERIENCE: ['Entry level (0-2 years)', 'Medium (2-5 years)', 'Expert (5+ years)'],
