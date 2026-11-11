@@ -1,5 +1,4 @@
-// frontend/src/components/ui/Avatar.jsx
-// Owner: Aarian (UI kit)
+
 // Shows the profile picture, or initials if there is none.
 //   <Avatar name={user.full_name} src={user.profile_picture_url} size={40} />
 export default function Avatar({ name = '', src, size = 40 }) {

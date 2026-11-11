@@ -1,6 +1,4 @@
-// frontend/src/pages/auth/Login.jsx
-// Owner: Aarian
-// SRS 4.1 Login: email + password -> JWT -> redirect by role.
+
 import { useState } from 'react';
 import { Link, Navigate, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';

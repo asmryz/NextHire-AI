@@ -1,5 +1,4 @@
-// backend/controllers/department.controller.js
-// Owner: Shivani
+
 const { pool } = require('../config/db');
 
 // GET /api/departments  -> list for dropdowns (vacancy form, filters)
@@ -15,7 +14,7 @@ async function listDepartments(req, res) {
   }
 }
 
-// POST /api/departments  (HR only)  Body: name, description
+// (HR only)  Body: name, description
 async function createDepartment(req, res) {
   const name = String(req.body?.name || '').trim();
   const description = req.body?.description ? String(req.body.description).trim() : null;

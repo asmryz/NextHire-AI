@@ -1,6 +1,4 @@
-// frontend/src/layouts/HRLayout.jsx
-// Owner: Aarian
-// Brown sidebar for every HR screen. Pages render inside <Outlet />.
+
 // To add a menu item: add one line to NAV below (tell your partner first).
 import { useState } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';

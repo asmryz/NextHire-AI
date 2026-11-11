@@ -1,13 +1,4 @@
-// backend/config/db.js
-// Owner: Aarian
 // Neon PostgreSQL connection pool. Use `pool.query(...)` everywhere.
-//
-// Neon suspends the database after a few idle minutes and closes open connections.
-// Without the handling below, the first request after a pause failed ("Something went wrong")
-// or even crashed the backend, and only the 2nd/3rd login worked. Now:
-//   - closed idle connections are logged, not fatal (pool 'error' handler)
-//   - idle connections are dropped before Neon drops them
-//   - a query that hits a dropped connection / waking database is retried once
 require('dotenv').config();
 const { Pool } = require('pg');
 

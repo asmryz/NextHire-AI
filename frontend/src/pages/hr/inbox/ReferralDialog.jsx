@@ -1,7 +1,4 @@
-// frontend/src/pages/hr/inbox/ReferralDialog.jsx
-// Owner: Shivani
-// Popup where HR writes which employee referred the candidate.
-//   PUT /api/inbox/:id/referral
+
 import { useEffect, useRef, useState } from 'react';
 import api, { getErrorMessage, getFieldErrors } from '../../../services/api';
 import { useDepartments } from '../../../services/departments';

@@ -1,8 +1,4 @@
-// backend/scripts/createHrAdmin.js
-// Owner: Aarian
-// HR Admin can't sign up from the website (only candidates can).
-// Run ONCE from the backend folder:
-//   node scripts/createHrAdmin.js "HR Admin" hr@company.com "StrongPass123"
+
 const bcrypt = require('bcryptjs');
 const { pool } = require('../config/db');
 const { isEmail, isStrongPassword, cleanEmail, MESSAGES } = require('../utils/validators');

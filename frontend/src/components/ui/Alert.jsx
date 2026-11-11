@@ -1,5 +1,4 @@
-// frontend/src/components/ui/Alert.jsx
-// Owner: Aarian (UI kit)
+
 //   <Alert type="error">Incorrect email or password.</Alert>
 //   types: error | success | info
 const STYLES = {

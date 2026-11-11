@@ -1,10 +1,4 @@
--- backend/database/migration_003_referral_departments.sql
--- Owner: Shivani
--- 1) Employee referral: HR marks an application as referred and saves the employee's details
---    (the "referral" table already exists in the schema; this adds email, phone and dates).
--- 2) More departments for the vacancy form.
--- 3) Certifications no longer have a "minimum" value.
--- Safe to run more than once. Run ONCE in Neon > SQL Editor (new empty editor).
+
 
 -- ---------- 1. Referral details
 ALTER TABLE referral ADD COLUMN IF NOT EXISTS employee_email VARCHAR(255);

@@ -1,6 +1,5 @@
-// backend/utils/applicationEmails.js
-// Owner: Shivani
-// Application submission confirmation email (SRS REQ-22).
+
+// Application submission confirmation email 
 // Call it from the Apply controller AFTER the application is saved:
 //
 //   const { sendApplicationConfirmation } = require('../utils/applicationEmails');

@@ -1,7 +1,3 @@
-// backend/controllers/auth.controller.js
-// Owner: Aarian
-// SRS 4.1: Sign Up (with email OTP), Login, Forgot / Reset Password, Me.
-// Logout is done on the frontend by deleting the token (REQ-8).
 const bcrypt = require('bcryptjs');
 const { pool } = require('../config/db');
 const { sendMail, layout } = require('../utils/mailer');
@@ -35,11 +31,9 @@ async function findExistingAccount(email, cnic) {
   return rows.length ? 'An account with this email or CNIC already exists. Please log in.' : null;
 }
 
-// ---------------------------------------------------------------------
-// POST /api/auth/register/send-otp
+
 // Body: full_name, cnic, email, phone, password, confirm_password
-// Validates the whole form, then emails a 6-digit OTP.
-// ---------------------------------------------------------------------
+
 async function sendRegisterOtp(req, res) {
   const errors = v.validateSignUp(req.body);
   if (Object.keys(errors).length) {
@@ -93,11 +87,10 @@ async function sendRegisterOtp(req, res) {
   }
 }
 
-// ---------------------------------------------------------------------
-// POST /api/auth/register/verify
+
+
 // Body: same fields as send-otp + otp
-// Checks the OTP and only then creates the account (user + candidate_profile).
-// ---------------------------------------------------------------------
+
 async function verifyRegisterOtp(req, res) {
   const errors = v.validateSignUp(req.body);
   const otp = String(req.body.otp || '').trim();
@@ -176,9 +169,9 @@ async function verifyRegisterOtp(req, res) {
   }
 }
 
-// ---------------------------------------------------------------------
-// POST /api/auth/login   Body: email, password
-// ---------------------------------------------------------------------
+
+//Body: email, password
+
 async function login(req, res) {
   const { email, password } = req.body || {};
   const errors = {};
@@ -210,17 +203,15 @@ async function login(req, res) {
   }
 }
 
-// ---------------------------------------------------------------------
 // GET /api/auth/me   (needs token) -> the logged-in user
-// ---------------------------------------------------------------------
+
 function me(req, res) {
   return res.json({ user: publicUser(req.user) });
 }
 
-// ---------------------------------------------------------------------
-// POST /api/auth/forgot-password   Body: email
+
 // Always gives the same answer so nobody can check which emails exist.
-// ---------------------------------------------------------------------
+
 async function forgotPassword(req, res) {
   const { email } = req.body || {};
   if (!email || !v.isEmail(email)) {
@@ -266,9 +257,9 @@ async function forgotPassword(req, res) {
   }
 }
 
-// ---------------------------------------------------------------------
-// POST /api/auth/reset-password   Body: token, password, confirm_password
-// ---------------------------------------------------------------------
+
+// Body: token, password, confirm_password
+
 async function resetPassword(req, res) {
   const { token, password, confirm_password } = req.body || {};
   const errors = {};

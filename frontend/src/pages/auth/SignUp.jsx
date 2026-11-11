@@ -1,6 +1,5 @@
-// frontend/src/pages/auth/SignUp.jsx
-// Owner: Aarian
-// SRS 4.1 Sign Up + email OTP:
+
+// Sign Up + email OTP:
 //   Step 1: fill form -> backend validates and emails a 6-digit code
 //   Step 2: enter code -> account is created -> go to login
 import { useEffect, useState } from 'react';

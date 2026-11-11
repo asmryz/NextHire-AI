@@ -1,13 +1,4 @@
-// frontend/src/pages/hr/vacancies/VacancyEditor.jsx
-// Owner: Aarian
-// SRS 4.2: create / edit a vacancy in 3 steps on one page
-//   1. Details (title, department, location, start + end date, description)
-//   2. Requirements (type, name, minimum, mandatory flag, weightage -> must total 100%)
-//   3. Generic Form Mechanism: "Generate Form" builds a complete application form:
-//      standard sections (personal, education, experience, skills) + questions for every
-//      requirement (level / years / details). HR adjusts it, then Publish.
-// Lock rule (BR-21): once a vacancy has applications, everything is locked except the END DATE
-// (HR can still extend the deadline). The backend enforces the same rule.
+
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import api, { getErrorMessage, getFieldErrors } from '../../../services/api';

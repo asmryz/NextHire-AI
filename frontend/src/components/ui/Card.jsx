@@ -1,5 +1,4 @@
-// frontend/src/components/ui/Card.jsx
-// Owner: Aarian (UI kit)
+
 //   <Card>...</Card>           white card with soft border
 //   <Card soft>...</Card>      cream card (stats)
 export default function Card({ soft = false, className = '', children, ...props }) {

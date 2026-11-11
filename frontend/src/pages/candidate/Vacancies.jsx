@@ -1,8 +1,4 @@
-// frontend/src/pages/candidate/Vacancies.jsx
-// Owner: Shivani
-// SRS REQ-17: open vacancies, search by title / department, filter by department.
-// Candidates see every open position, but can apply only with a 100% profile and no other
-// active application (BR-12).
+
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import api, { getErrorMessage } from '../../services/api';
@@ -125,7 +121,7 @@ export default function Vacancies() {
             <span className="min-w-[200px] flex-1">
               You already have an active application for <span className="font-medium">{active.title}</span>. You can apply again once it is closed.
             </span>
-            <Link to="/candidate/applications" className="inline-flex h-9 items-center rounded-[10px] border border-brown bg-white px-3.5 text-sm font-medium text-brown transition-colors hover:bg-cream-soft active:bg-brown active:text-cream">View application</Link>
+            <Link to="/candidate/applications" className="inline-flex h-9 items-center rounded-[10px] border border-brown bg-white px-3.5 text-sm font-medium text-brown transition-colors hover:bg-brown hover:text-cream">View application</Link>
           </div>
         )}
         {!active && !profileReady && (
@@ -134,7 +130,7 @@ export default function Vacancies() {
             <span className="min-w-[200px] flex-1">
               Your profile is {data.profile_completeness}% complete. <span className="font-medium">Complete it to 100% to start applying.</span>
             </span>
-            <Link to="/candidate/profile" className="inline-flex h-9 items-center rounded-[10px] border border-brown bg-white px-3.5 text-sm font-medium text-brown transition-colors hover:bg-cream-soft active:bg-brown active:text-cream">Complete profile</Link>
+            <Link to="/candidate/profile" className="inline-flex h-9 items-center rounded-[10px] border border-brown bg-white px-3.5 text-sm font-medium text-brown transition-colors hover:bg-brown hover:text-cream">Complete profile</Link>
           </div>
         )}
 

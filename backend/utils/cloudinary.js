@@ -1,6 +1,4 @@
-// backend/utils/cloudinary.js
-// Owner: Shivani
-// Uploads profile pictures to Cloudinary (free plan). Pictures are resized to
+
 // 400x400 on upload so they stay small and use very little of the free quota.
 require('dotenv').config();
 const cloudinary = require('cloudinary').v2;

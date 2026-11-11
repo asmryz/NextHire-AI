@@ -1,5 +1,4 @@
-// frontend/src/components/ui/Checkbox.jsx
-// Owner: Aarian (UI kit)
+
 //   <Checkbox label="Mandatory" checked={x} onChange={(e) => setX(e.target.checked)} />
 export default function Checkbox({ label, className = '', ...props }) {
   return (

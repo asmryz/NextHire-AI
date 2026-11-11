@@ -1,10 +1,4 @@
-// frontend/src/layouts/AuthLayout.jsx
-// Owner: Aarian
-// Split screen for Login / Sign Up / Forgot / Reset.
-// On laptop/desktop the page fits one screen: the left panel never moves, only the form side
-// scrolls if it is taller than the screen (Sign Up). On mobile the page scrolls normally.
-// Animation: "EM Process Hiring" by Draje Robertson, LottieFiles (Lottie Simple License),
-// recoloured to the NexHire theme -> src/assets/hiring-process.json
+
 import { Outlet } from 'react-router-dom';
 import LottiePlayer from '../components/LottiePlayer';
 import hiringAnimation from '../assets/hiring-process.json';

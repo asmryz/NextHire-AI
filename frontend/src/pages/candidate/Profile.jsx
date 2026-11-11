@@ -1,6 +1,4 @@
-// frontend/src/pages/candidate/Profile.jsx
-// Owner: Shivani
-// SRS REQ-16: candidate views / edits personal and contact details + profile picture.
+
 // Email and CNIC are shown but cannot be changed (they identify the account).
 // The profile must be 100% complete (all fields + picture) before the candidate can apply.
 import { useEffect, useRef, useState } from 'react';

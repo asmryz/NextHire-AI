@@ -1,6 +1,4 @@
-// frontend/src/components/candidate/helpers.js
-// Owner: Shivani
-// Small date / text helpers shared by the candidate pages.
+
 
 // '2026-11-20' or ISO -> '20 Nov 2026'
 export const fmtDate = (d, withYear = true) =>

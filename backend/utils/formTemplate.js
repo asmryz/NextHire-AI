@@ -1,5 +1,4 @@
-// backend/utils/formTemplate.js
-// Owner: Aarian (used by Shivani's apply + inbox code too)
+
 // Generic Form Mechanism: every vacancy form =
 //   1. Standard sections every job needs (HR does not have to add them)
 //   2. "Role requirements": questions built from the vacancy's own requirements
@@ -32,7 +31,7 @@ const MIN_LEVELS = {
 
 // key, label, type, required, options, help
 const STANDARD_FIELDS = [
-  // ---- Personal (pre-filled from the candidate profile)
+  
   { section: 'PERSONAL', field_key: 'full_name', label: 'Full name', field_type: 'TEXT', is_required: true },
   { section: 'PERSONAL', field_key: 'email', label: 'Email address', field_type: 'EMAIL', is_required: true },
   { section: 'PERSONAL', field_key: 'phone', label: 'Phone number', field_type: 'PHONE', is_required: true, help_text: 'e.g. 03001234567' },
@@ -68,7 +67,7 @@ const CLOSING_FIELDS = [
     help_text: 'Optional, a few lines.' },
 ];
 
-// Personal details are NEVER sent to the AI (fair scoring, BR-3 / SRS 5.2)
+// Personal details are NEVER sent to the AI (fair scoring)
 const NOT_FOR_AI = ['full_name', 'email', 'phone', 'cnic', 'gender', 'city', 'cover_note'];
 
 // Fields HR may not delete (needed for contact + duplicate detection)

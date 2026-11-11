@@ -1,6 +1,4 @@
-// frontend/src/pages/candidate/ApplicationDetail.jsx
-// Owner: Shivani
-// One application: progress, live status, timeline and the answers the candidate submitted (read-only).
+
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import api, { getErrorMessage } from '../../services/api';

@@ -1,5 +1,4 @@
-// frontend/src/layouts/CandidateLayout.jsx
-// Owner: Aarian (Shivani's candidate pages render inside it)
+
 // Candidate portal: sticky top bar with pill navigation (different from HR's sidebar) + footer.
 import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';

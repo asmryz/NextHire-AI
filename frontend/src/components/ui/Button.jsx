@@ -1,5 +1,4 @@
-// frontend/src/components/ui/Button.jsx
-// Owner: Aarian (UI kit - everyone uses, only Aarian edits)
+
 //   <Button>Save</Button>
 //   <Button variant="secondary">Cancel</Button>
 //   <Button variant="important">Publish</Button>

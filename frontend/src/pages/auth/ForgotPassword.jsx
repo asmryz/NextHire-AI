@@ -1,5 +1,4 @@
-// frontend/src/pages/auth/ForgotPassword.jsx
-// Owner: Aarian
+
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import api, { getErrorMessage } from '../../services/api';

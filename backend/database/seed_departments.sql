@@ -1,7 +1,4 @@
--- backend/database/seed_departments.sql
--- Owner: Shivani
--- Starting departments. Safe to run again: existing names are skipped.
--- Run once in Neon > SQL Editor (new empty editor).
+
 INSERT INTO department (name, description) VALUES
   ('Engineering',      'Software development, QA and DevOps'),
   ('Human Resources',  'Recruitment, people and culture'),

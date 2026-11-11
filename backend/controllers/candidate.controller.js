@@ -1,16 +1,11 @@
-// backend/controllers/candidate.controller.js
-// Owner: Shivani
-// SRS 4.3 Candidate Portal:
-//   REQ-16 view / edit personal and contact details (+ profile picture)
-//   REQ-17 list open vacancies, search by title or department
-//   REQ-18 full description and requirements of a selected vacancy
-//   BR-12 one application per vacancy, only while open, one active application at a time
+
+
 const { pool } = require('../config/db');
 const { uploadProfilePicture, deleteImage } = require('../utils/cloudinary');
 const { isPhone, cleanPhone } = require('../utils/validators');
 const { profileStatus, getProfileStatus, PROFILE_INCOMPLETE_MESSAGE } = require('../utils/profile');
 
-const GENDERS = ['MALE', 'FEMALE', 'OTHER']; // required (NOT_SPECIFIED is only for old rows)
+const GENDERS = ['MALE', 'FEMALE', 'OTHER']; 
 const toInt = (v) => {
   const n = Number.parseInt(v, 10);
   return Number.isFinite(n) && n > 0 ? n : null;
@@ -53,7 +48,7 @@ async function getProfile(req, res) {
   }
 }
 
-// PUT /api/candidate/profile
+
 // Body: full_name, phone, address, city, gender, highest_qualification
 async function updateProfile(req, res) {
   const b = req.body || {};

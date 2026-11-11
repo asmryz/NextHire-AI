@@ -1,5 +1,4 @@
-// frontend/src/components/LottiePlayer.jsx
-// Owner: Shivani
+
 // Plays a Lottie JSON animation (files in src/assets). Decorative only (hidden from screen readers).
 // Uses lottie-web directly (the lottie-react wrapper does not load with Vite 8).
 // If the user turned off animations in system settings, a still frame is shown instead.

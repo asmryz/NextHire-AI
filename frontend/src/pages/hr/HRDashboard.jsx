@@ -1,7 +1,4 @@
-// frontend/src/pages/hr/HRDashboard.jsx
-// Owner: Aarian (analytics added for Shivani's request)
-// HR home: KPIs + charts from GET /api/inbox/analytics.
-// Charts are plain HTML/CSS (no chart library): magnitude = rust, AI match results = status colours with labels.
+
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';

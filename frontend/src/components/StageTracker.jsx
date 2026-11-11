@@ -1,18 +1,10 @@
-// frontend/src/components/StageTracker.jsx
-// Owner: Shivani
-// Application progress shown to the candidate: Applied -> Under review -> Interview.
-//   stage APPLIED      -> "Applied" done, "Under review" in progress
-//   stage SHORTLISTED  -> review done, "Interview" being arranged
-//   stage INTERVIEW    -> "Interview" in progress
-// Offer / Hired are not shown as steps; when reached, every step is complete and a note is shown.
-//   <StageTracker stage="SHORTLISTED" />          full tracker with labels
-//   <StageTracker stage="APPLIED" compact />       thin bar only (cards)
+
 const STEPS = [
   { label: 'Applied', hint: 'Form received' },
   { label: 'Under review', hint: 'Application review' },
   { label: 'Interview', hint: 'Meet the team' },
 ];
-// Which step is "in progress" for each database stage
+
 const CURRENT = { APPLIED: 1, SHORTLISTED: 2, INTERVIEW: 2 };
 const CURRENT_HINT = { APPLIED: 'In progress', SHORTLISTED: 'Being arranged', INTERVIEW: 'In progress' };
 const AFTER = { OFFER: 'Great news: you have received an offer. HR will contact you with the details.', HIRED: 'Congratulations, you have been hired!' };

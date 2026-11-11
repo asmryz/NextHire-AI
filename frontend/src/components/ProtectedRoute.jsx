@@ -1,5 +1,4 @@
-// frontend/src/components/ProtectedRoute.jsx
-// Owner: Aarian
+
 // Wrap any page group that needs login (and optionally a role).
 //   <Route element={<ProtectedRoute roles={['HR_ADMIN']} />}> ... </Route>
 import { Navigate, Outlet, useLocation } from 'react-router-dom';

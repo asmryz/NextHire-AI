@@ -1,5 +1,3 @@
-// backend/utils/audit.js
-// Owner: Aarian (everyone can use it)
 // Writes one row to audit_log so every important action is traceable (SRS traceability).
 //   await logAudit(db, req.user.user_id, 'vacancy', vacancyId, 'PUBLISH', 'Frontend Developer');
 // `db` can be the pool or a transaction client.

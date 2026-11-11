@@ -1,6 +1,4 @@
-// frontend/src/components/candidate/Icon.jsx
-// Owner: Shivani
-// Small line icons for the candidate portal (no icon library needed).
+
 //   <Icon name="briefcase" className="h-4 w-4" />
 const PATHS = {
   briefcase: 'M4 7h16v12H4zM9 7V5h6v2M4 12h16',

@@ -1,5 +1,4 @@
-// backend/routes/auth.routes.js
-// Owner: Aarian
+
 const express = require('express');
 const auth = require('../controllers/auth.controller');
 const { verifyToken } = require('../middleware/auth');

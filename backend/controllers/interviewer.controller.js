@@ -1,9 +1,4 @@
-// backend/controllers/interviewer.controller.js
-// Owner: Aarian
-// SRS 4.1 "Manage Interviewer Accounts" (REQ-7, BR-14, BR-18):
-//   HR Admin creates an interviewer account (login details are emailed),
-//   views it with its assigned interviews and feedback, and deletes it.
-//   Delete = login blocked (status DELETED); past interviews and feedback stay in the records.
+
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const { pool } = require('../config/db');
@@ -31,7 +26,7 @@ function tempPassword() {
   return chars.join('');
 }
 
-// GET /api/interviewers?search=&include_deleted=true
+
 async function listInterviewers(req, res) {
   const search = req.query.search ? String(req.query.search).trim() : null;
   const includeDeleted = req.query.include_deleted === 'true';
@@ -56,7 +51,7 @@ async function listInterviewers(req, res) {
   }
 }
 
-// POST /api/interviewers   Body: full_name, email, department_id, designation, phone
+//Body: full_name, email, department_id, designation, phone
 async function createInterviewer(req, res) {
   const b = req.body || {};
   const errors = {};
@@ -111,7 +106,7 @@ async function createInterviewer(req, res) {
     client.release();
   }
 
-  // Email the login details. If it fails the account still exists (SRS exception flow).
+  
   const portal = process.env.FRONTEND_URL || 'http://localhost:5173';
   const subject = 'Your NexHire AI interviewer account';
   let emailSent = true;
@@ -159,7 +154,7 @@ async function createInterviewer(req, res) {
   });
 }
 
-// GET /api/interviewers/:id   account + assigned interviews + recorded feedback
+
 async function getInterviewer(req, res) {
   const id = toInt(req.params.id);
   if (!id) return res.status(404).json({ message: 'Interviewer not found.' });
@@ -205,7 +200,7 @@ async function getInterviewer(req, res) {
   }
 }
 
-// DELETE /api/interviewers/:id   blocks login, keeps history (BR-18)
+
 async function deleteInterviewer(req, res) {
   const id = toInt(req.params.id);
   if (!id) return res.status(404).json({ message: 'Interviewer not found.' });

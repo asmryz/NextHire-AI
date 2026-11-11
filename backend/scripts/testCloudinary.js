@@ -1,4 +1,4 @@
-// backend/scripts/testCloudinary.js
+
 // Checks that the Cloudinary keys in .env are correct.
 require('dotenv').config();
 const cloudinary = require('cloudinary').v2;

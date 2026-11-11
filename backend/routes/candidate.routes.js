@@ -1,6 +1,3 @@
-// backend/routes/candidate.routes.js
-// Owner: Shivani
-// Everything a logged-in candidate can do. Mounted at /api/candidate in server.js.
 const express = require('express');
 const multer = require('multer');
 const candidate = require('../controllers/candidate.controller');
@@ -10,7 +7,7 @@ const { verifyToken, requireRole } = require('../middleware/auth');
 const router = express.Router();
 router.use(verifyToken, requireRole('CANDIDATE'));
 
-// Profile picture: kept in memory (not saved on the laptop), max 2 MB, images only
+// Profile picture: kept in memory (not saved on the laptop)
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 2 * 1024 * 1024 },
@@ -31,17 +28,14 @@ function pictureUpload(req, res, next) {
   });
 }
 
-// Profile (Part 2)
 router.get('/profile', candidate.getProfile);
 router.put('/profile', candidate.updateProfile);
 router.post('/profile/picture', pictureUpload, candidate.uploadPicture);
 router.delete('/profile/picture', candidate.removePicture);
 
-// Vacancies (Part 2)
 router.get('/vacancies', candidate.listOpenVacancies);
 router.get('/vacancies/:id', candidate.getOpenVacancy);
 
-// Apply + My Applications (Part 3)
 router.post('/vacancies/:id/apply', application.applyToVacancy);
 router.get('/applications', application.listMyApplications);
 router.get('/applications/:id', application.getMyApplication);

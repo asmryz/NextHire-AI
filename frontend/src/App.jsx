@@ -1,5 +1,4 @@
-// frontend/src/App.jsx
-// Owner: Aarian (shared file: to add a page, add ONE <Route> line and tell your partner)
+
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import { homeForRole, ROLES } from './utils/roles';

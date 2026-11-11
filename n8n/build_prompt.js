@@ -1,5 +1,4 @@
-// n8n Code node: "Build prompt"   (Mode: Run Once for Each Item)
-// Input: one row from "Load application" (application_id, vacancy_id, vacancy_title, requirements, answers)
+
 const row = $input.item.json;
 const reqs = typeof row.requirements === 'string' ? JSON.parse(row.requirements) : row.requirements || [];
 const answers = typeof row.answers === 'string' ? JSON.parse(row.answers) : row.answers || [];

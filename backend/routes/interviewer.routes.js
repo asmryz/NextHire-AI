@@ -1,6 +1,4 @@
-// backend/routes/interviewer.routes.js
-// Owner: Aarian
-// HR Admin only (BR-14). Mounted at /api/interviewers in server.js.
+
 const express = require('express');
 const interviewer = require('../controllers/interviewer.controller');
 const { verifyToken, requireRole } = require('../middleware/auth');

@@ -1,5 +1,4 @@
-// frontend/src/layouts/InterviewerLayout.jsx
-// Owner: Aarian
+
 // Interviewer view (FYP-II) - simple header for now.
 import { Outlet } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';

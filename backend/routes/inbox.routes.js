@@ -1,6 +1,4 @@
-// backend/routes/inbox.routes.js
-// Owner: Shivani
-// HR Admin only. Mounted at /api/inbox in server.js.
+
 const express = require('express');
 const inbox = require('../controllers/inbox.controller');
 const { verifyToken, requireRole } = require('../middleware/auth');

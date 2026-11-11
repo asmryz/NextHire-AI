@@ -1,6 +1,4 @@
-// frontend/src/pages/hr/vacancies/VacancyList.jsx
-// Owner: Aarian
-// SRS 4.2 (REQ-14, REQ-15): list vacancies with status, search, filter by department,
+
 // edit, close, delete (only without applications), pagination.
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';

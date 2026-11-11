@@ -1,7 +1,4 @@
-// backend/routes/vacancy.routes.js
-// Owner: Aarian
-// HR Admin vacancy management. Candidates see vacancies through Shivani's
-// routes/candidate.routes.js (open vacancies only).
+
 const express = require('express');
 const vacancy = require('../controllers/vacancy.controller');
 const { verifyToken, requireRole } = require('../middleware/auth');

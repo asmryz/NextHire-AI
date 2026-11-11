@@ -1,5 +1,4 @@
-// frontend/src/pages/auth/ResetPassword.jsx
-// Owner: Aarian
+
 // Opened from the email link: /reset-password?token=...
 import { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';

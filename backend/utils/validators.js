@@ -1,6 +1,3 @@
-// backend/utils/validators.js
-// Owner: Aarian
-// Input checks and the exact error messages from the SRS (section 4.1).
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const CNIC_RE = /^\d{5}-\d{7}-\d$/;           // what the user types: XXXXX-XXXXXXX-X
@@ -26,7 +23,7 @@ const cleanCnic = (v) => v.replace(/-/g, '').trim();
 const cleanEmail = (v) => v.trim().toLowerCase();
 const cleanPhone = (v) => v.replace(/[\s-]/g, '');
 
-// Returns { field: message } for every invalid field; empty object = valid.
+
 function validateSignUp(body) {
   const errors = {};
   const { full_name, cnic, email, phone, password, confirm_password } = body || {};

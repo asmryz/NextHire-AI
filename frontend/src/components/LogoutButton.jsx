@@ -1,6 +1,4 @@
-// frontend/src/components/LogoutButton.jsx
-// Owner: Aarian
-// SRS Logout use case: confirm -> remove token -> login page with message.
+
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';

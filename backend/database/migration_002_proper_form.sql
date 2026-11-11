@@ -1,11 +1,4 @@
--- =====================================================================
---  NexHire AI - Migration 002: proper application form
---  Adds: radio / dropdown / long text / email / phone questions,
---        answer options, standard sections (Personal, Education, ...).
---
---  SAFE: nothing is dropped or deleted. Safe to run again.
---  Run ONCE in Neon > SQL Editor (new empty editor).
--- =====================================================================
+
 
 -- 1. New answer types (each line on its own; IF NOT EXISTS makes re-runs safe)
 ALTER TYPE form_field_type ADD VALUE IF NOT EXISTS 'TEXTAREA';

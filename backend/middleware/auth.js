@@ -1,11 +1,3 @@
-// backend/middleware/auth.js
-// Owner: Aarian (everyone uses it)
-//
-// Usage in any route file:
-//   const { verifyToken, requireRole } = require('../middleware/auth');
-//   router.get('/something', verifyToken, requireRole('HR_ADMIN'), controller.fn);
-//
-// After verifyToken, req.user = { user_id, full_name, email, role, profile_picture_url }
 const { pool } = require('../config/db');
 const { verifyJwt } = require('../utils/token');
 
@@ -29,7 +21,7 @@ async function verifyToken(req, res, next) {
   }
 
   try {
-    // Check the account still exists and is active (deleted interviewers are blocked, BR-18)
+    // Check the account still exists and is active 
     const { rows } = await pool.query(
       `SELECT user_id, full_name, email, role, status, profile_picture_url
          FROM users WHERE user_id = $1`,
@@ -47,7 +39,6 @@ async function verifyToken(req, res, next) {
   }
 }
 
-// requireRole('HR_ADMIN') or requireRole('HR_ADMIN', 'INTERVIEWER')
 function requireRole(...roles) {
   return (req, res, next) => {
     if (!req.user || !roles.includes(req.user.role)) {

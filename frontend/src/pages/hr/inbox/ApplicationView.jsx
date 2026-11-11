@@ -1,7 +1,4 @@
-// frontend/src/pages/hr/inbox/ApplicationView.jsx
-// Owner: Shivani
-// SRS REQ-27: the full submitted form with all answers, the portfolio link and the current stage.
-// Right column: Application ID -> Audit log -> AI evaluation (REQ-28) -> Employee referral -> Candidate.
+
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import api, { getErrorMessage } from '../../../services/api';

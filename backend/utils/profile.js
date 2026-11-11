@@ -1,5 +1,4 @@
-// backend/utils/profile.js
-// Owner: Shivani
+
 // Profile completeness: a candidate can apply only when the profile is 100% complete.
 // Used by candidate.controller.js (profile page, vacancy page) and application.controller.js (apply).
 const PROFILE_FIELDS = [
@@ -12,7 +11,7 @@ const PROFILE_FIELDS = [
   { key: 'profile_picture_url', label: 'Profile picture' },
 ];
 
-// p = row with the fields above -> { completeness: 0-100, missing: ['City', ...] }
+
 function profileStatus(p = {}) {
   const missing = PROFILE_FIELDS.filter(({ key }) => {
     const v = p[key];

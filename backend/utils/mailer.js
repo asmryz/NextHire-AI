@@ -1,8 +1,6 @@
-// backend/utils/mailer.js
-// Owner: Aarian (Shivani uses sendMail() for the submission email)
 // Sends email through Gmail (Nodemailer + Gmail App Password).
-// If EMAIL_USER / EMAIL_APP_PASSWORD are missing in .env, the email is printed
-// in the terminal instead, so development still works.
+
+
 require('dotenv').config();
 const nodemailer = require('nodemailer');
 
@@ -29,7 +27,7 @@ async function sendMail({ to, subject, html, text }) {
   return transporter.sendMail({ from: FROM, to, subject, html, text });
 }
 
-// Shared email look (brand colours) so every email matches the app.
+
 function layout(title, bodyHtml) {
   return `
   <div style="font-family:Arial,Helvetica,sans-serif;background:#FFFBEF;padding:24px;color:#4D2A00">

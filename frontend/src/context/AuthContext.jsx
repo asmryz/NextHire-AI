@@ -1,5 +1,4 @@
-// frontend/src/context/AuthContext.jsx
-// Owner: Aarian
+
 // Holds the logged-in user for the whole app.
 //   const { user, login, logout, loading } = useAuth();
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';

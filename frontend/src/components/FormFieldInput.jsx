@@ -1,5 +1,4 @@
-// frontend/src/components/FormFieldInput.jsx
-// Owner: Aarian (used by the HR form preview and Shivani's Apply page)
+
 // Draws one application-form question in the right control for its type.
 //   <FormFieldInput field={f} value={v} onChange={(val) => ...} error={...} />
 import { Input, RadioGroup, Select, Textarea } from './ui';

@@ -1,5 +1,4 @@
-// frontend/src/components/ui/Badge.jsx
-// Owner: Aarian (UI kit)
+
 //   <Badge status="OPEN" />  or  <Badge tone="success">Open</Badge>
 const TONES = {
   success: 'bg-success-soft text-success',

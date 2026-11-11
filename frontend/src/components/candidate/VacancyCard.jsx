@@ -1,6 +1,4 @@
-// frontend/src/components/candidate/VacancyCard.jsx
-// Owner: Shivani
-// One open position as a card (Vacancies page + Home "Latest openings").
+
 import { Link, useNavigate } from 'react-router-dom';
 import { Badge, Button } from '../ui';
 import Icon from './Icon';

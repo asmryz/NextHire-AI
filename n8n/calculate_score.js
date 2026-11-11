@@ -1,7 +1,7 @@
 // n8n Code node: "Calculate score"   (Mode: Run Once for Each Item)
 // Input: the Gemini node's output. Takes requirements + answers from "Build prompt".
 //
-// Hybrid evaluation (SRS REQ-29..31, REQ-40):
+// Hybrid evaluation:
 //   1. Structured answers are checked by fixed rules, so they are always judged the same way:
 //        SKILL          level answer (None < Entry level < Medium < Expert) vs the minimum
 //        EXPERIENCE     years answer vs the minimum years

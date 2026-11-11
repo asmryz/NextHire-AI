@@ -1,6 +1,4 @@
-// frontend/src/components/candidate/ProgressRing.jsx
-// Owner: Shivani
-// Round progress indicator (profile completeness).  <ProgressRing value={86} size={72} />
+
 export default function ProgressRing({ value = 0, size = 72, stroke = 7, label = 'Profile complete', dark = false }) {
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;

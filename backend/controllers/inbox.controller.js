@@ -1,12 +1,5 @@
-// backend/controllers/inbox.controller.js
-// Owner: Shivani
-// SRS 4.4 Application Inbox (HR Admin only):
-//   REQ-24 all applications per vacancy in one inbox
-//   REQ-25 filter by vacancy, date, score, match tag; search by candidate name
-//   REQ-26 pagination
-//   REQ-27 full details of one application incl. portfolio link
-//   REQ-28 applications without an AI score are marked "Pending evaluation"
-// Also: HR dashboard analytics, employee referral details, application audit log.
+
+//HR dashboard analytics, employee referral details, application audit log.
 const { pool } = require('../config/db');
 const { logAudit } = require('../utils/audit');
 const v = require('../utils/validators');
@@ -31,7 +24,7 @@ const CURRENT_SCORE = `
   LEFT JOIN ai_score s
          ON s.application_id = a.application_id AND s.is_current AND s.eval_status = 'EVALUATED'`;
 
-// GET /api/inbox?vacancy_id=&from=&to=&min_score=&max_score=&tag=&stage=&search=&sort=&page=&limit=
+
 async function listInbox(req, res) {
   const q = req.query;
   const vacancyId = toInt(q.vacancy_id);
@@ -106,7 +99,7 @@ async function inboxVacancies(req, res) {
   }
 }
 
-// GET /api/inbox/:id   full application (REQ-27)
+// GET /api/inbox/:id   full application 
 async function getApplication(req, res) {
   const id = toInt(req.params.id);
   if (!id) return res.status(404).json({ message: 'Application not found.' });
@@ -229,7 +222,7 @@ function validateReferral(b = {}) {
   return { clean, errors: e };
 }
 
-// PUT /api/inbox/:id/referral   Body: employee_name, employee_email, employee_phone, employee_department, employee_position
+// Body: employee_name, employee_email, employee_phone, employee_department, employee_position
 async function saveReferral(req, res) {
   const id = toInt(req.params.id);
   if (!id) return res.status(404).json({ message: 'Application not found.' });
@@ -263,7 +256,6 @@ async function saveReferral(req, res) {
   }
 }
 
-// DELETE /api/inbox/:id/referral
 async function removeReferral(req, res) {
   const id = toInt(req.params.id);
   if (!id) return res.status(404).json({ message: 'Application not found.' });
@@ -279,7 +271,6 @@ async function removeReferral(req, res) {
 }
 
 // ================================================================ ANALYTICS
-// GET /api/inbox/analytics   everything the HR dashboard shows, in one call
 async function analytics(req, res) {
   try {
     const [kpi, trend, stages, tags, departments, vacancies, recent] = await Promise.all([

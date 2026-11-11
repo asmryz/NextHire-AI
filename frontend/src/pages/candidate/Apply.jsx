@@ -1,11 +1,9 @@
-// frontend/src/pages/candidate/Apply.jsx
-// Owner: Shivani
-// SRS 4.3: the position-specific structured form (no CV), optional portfolio link,
+
 // validation, submit -> confirmation email. Personal details are pre-filled from the profile.
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import api, { getErrorMessage } from '../../services/api';
-import { Alert, Button, Input, Spinner } from '../../components/ui';
+import { Alert, Button, Card, Input, Spinner } from '../../components/ui';
 import FormFieldInput, { groupBySection } from '../../components/FormFieldInput';
 import LottiePlayer from '../../components/LottiePlayer';
 import BackButton from '../../components/candidate/BackButton';
@@ -15,7 +13,7 @@ const URL_RE = /^https?:\/\/[^\s.]+\.[^\s]{2,}$/i;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const GENDER = { MALE: 'Male', FEMALE: 'Female', OTHER: 'Other' };
 
-// Answers taken from the candidate's profile (SRS: profile details pre-fill applications)
+// Answers taken from the candidate's profile 
 function prefill(fields, profile) {
   if (!profile) return {};
   const fromProfile = {
@@ -135,28 +133,20 @@ export default function Apply() {
     );
   }
 
-  const groups = groupBySection(v.form_fields);
-  const filled = (f) => String(answers[f.field_id] ?? '').trim() !== '';
-  const required = v.form_fields.filter((f) => f.is_required);
-  const progress = required.length ? Math.round((required.filter(filled).length / required.length) * 100) : 100;
-  const WIDE = ['TEXTAREA', 'LIST', 'RADIO'];
-
   return (
     <div className="flex flex-col">
       <section className="bg-cream">
-        <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-8 sm:px-8">
+        <div className="mx-auto flex max-w-3xl flex-col gap-2 px-4 py-8 sm:px-10">
           <BackButton to={`/candidate/vacancies/${v.vacancy_id}`}>Back to vacancy</BackButton>
-          <div>
-            <p className="text-sm text-muted">{v.department}</p>
-            <h1 className="mt-1 text-[28px] font-semibold leading-tight tracking-tight sm:text-[34px]">Apply for {v.title}</h1>
-            <p className="mt-2 text-sm italic text-muted">Fields marked * are required. No CV upload is needed.</p>
-          </div>
+          <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">{v.department}</p>
+          <h1 className="text-3xl font-semibold tracking-tight">Apply for {v.title}</h1>
+          <p className="text-sm text-muted">Answer the questions below. Fields marked * are required. No CV upload is needed.</p>
         </div>
       </section>
 
-      <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-8">
+      <div className="mx-auto flex w-full max-w-3xl flex-col gap-5 px-4 py-8 sm:px-10">
         {!canApply ? (
-          <div className="flex max-w-3xl flex-col gap-4">
+          <>
             <Alert type="info">{reason}</Alert>
             <div className="flex flex-wrap gap-3">
               {data.profile && data.profile.completeness < 100 && (
@@ -164,91 +154,43 @@ export default function Apply() {
               )}
               <Button variant="secondary" onClick={() => navigate('/candidate/vacancies')}>Browse other positions</Button>
             </div>
-          </div>
+          </>
         ) : (
-          <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
-            {/* ---------------- The form ---------------- */}
-            <form id="apply-form" onSubmit={onSubmit} noValidate className="flex min-w-0 flex-col gap-5">
-              <Alert type="error">{message}</Alert>
-              {groups.map((g, gi) => (
-                <section key={`${g.section}-${gi}`} id={`sec-${gi}`} className="scroll-mt-24 rounded-2xl border border-line bg-white p-5 sm:p-6">
-                  <h2 className="flex items-center gap-2.5 text-lg font-semibold">
-                    <span className="flex h-7 w-7 items-center justify-center rounded-full bg-cream text-xs text-rust">{gi + 1}</span>
-                    {g.label}
-                  </h2>
-                  <div className="mt-5 grid gap-x-5 gap-y-4 md:grid-cols-2">
-                    {g.fields.map((f) => (
-                      <div key={f.field_id} className={WIDE.includes(f.field_type) ? 'md:col-span-2' : ''}>
-                        <FormFieldInput
-                          field={f}
-                          value={answers[f.field_id] || ''}
-                          onChange={(val) => setAnswer(f.field_id, val)}
-                          error={errors[f.field_id]}
-                          readOnly={f.field_key === 'email'}
-                        />
-                      </div>
-                    ))}
-                  </div>
+          <Card className="p-6">
+            <Alert type="error" className="mb-5">{message}</Alert>
+            <form onSubmit={onSubmit} noValidate className="flex flex-col gap-5">
+              {groupBySection(v.form_fields).map((g, gi) => (
+                <section key={`${g.section}-${gi}`} className="flex flex-col gap-4 border-b border-line pb-6 last:border-0">
+                  <h2 className="text-lg font-semibold">{g.label}</h2>
+                  {g.fields.map((f) => (
+                    <FormFieldInput
+                      key={f.field_id}
+                      field={f}
+                      value={answers[f.field_id] || ''}
+                      onChange={(val) => setAnswer(f.field_id, val)}
+                      error={errors[f.field_id]}
+                      readOnly={f.field_key === 'email'}
+                    />
+                  ))}
                 </section>
               ))}
 
-              <section className="rounded-2xl border border-line bg-white p-5 sm:p-6">
-                <Input
-                  label="Portfolio / context link (optional)"
-                  type="url"
-                  placeholder="https://github.com/your-name"
-                  hint="GitHub, LinkedIn or personal site. Not used for scoring."
-                  value={portfolio}
-                  onChange={(e) => { setPortfolio(e.target.value); setErrors((x) => ({ ...x, portfolio_link: '' })); }}
-                  error={errors.portfolio_link}
-                />
-              </section>
+              <Input
+                label="Portfolio / context link (optional)"
+                type="url"
+                placeholder="https://github.com/your-name"
+                hint="GitHub, LinkedIn or personal site. Not used for scoring."
+                value={portfolio}
+                onChange={(e) => { setPortfolio(e.target.value); setErrors((x) => ({ ...x, portfolio_link: '' })); }}
+                error={errors.portfolio_link}
+              />
 
-              {/* Submit for phones/tablets (on laptops the side panel has it) */}
-              <div className="flex flex-col gap-2 lg:hidden">
-                <Button type="submit" loading={submitting} fullWidth>Submit application</Button>
-                <span className="text-center text-xs italic text-muted">You can apply to this vacancy only once.</span>
+              <div className="flex flex-wrap items-center gap-3 border-t border-line pt-5">
+                <Button type="submit" loading={submitting}>Submit application</Button>
+                <span className="text-xs text-muted">You can apply to this vacancy only once.</span>
               </div>
             </form>
-
-            {/* ---------------- Side panel (stays in view) ---------------- */}
-            <aside className="hidden rounded-2xl border border-line bg-white p-5 lg:sticky lg:top-24 lg:flex lg:flex-col lg:gap-5">
-              <div>
-                <p className="text-xs text-muted">Applying for</p>
-                <p className="mt-0.5 font-semibold leading-snug">{v.title}</p>
-                <p className="text-xs italic text-muted">{v.department}</p>
-              </div>
-              <div>
-                <div className="flex justify-between text-sm">
-                  <span className="font-medium">Required answers</span>
-                  <span className="text-muted">{progress}%</span>
-                </div>
-                <div className="mt-2 h-2 rounded-full bg-cream-soft" role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100} aria-label="Form completed">
-                  <div className="h-2 rounded-full bg-rust transition-[width] duration-500" style={{ width: `${progress}%` }} />
-                </div>
-              </div>
-              <nav aria-label="Form sections">
-                <ul className="flex flex-col gap-1">
-                  {groups.map((g, gi) => {
-                    const req = g.fields.filter((f) => f.is_required);
-                    const done = req.length > 0 && req.every(filled);
-                    return (
-                      <li key={`${g.section}-${gi}`}>
-                        <a href={`#sec-${gi}`} className="flex items-center justify-between gap-2 rounded-lg px-2.5 py-2 text-sm hover:bg-cream-soft active:bg-brown active:text-cream">
-                          <span>{g.label}</span>
-                          <span className={`text-xs ${done ? 'text-success' : 'text-muted'}`}>{req.length === 0 ? 'Optional' : done ? '✓ Done' : `${req.filter(filled).length}/${req.length}`}</span>
-                        </a>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </nav>
-              <div className="flex flex-col gap-2 border-t border-line pt-4">
-                <Button type="submit" form="apply-form" loading={submitting} fullWidth>Submit application</Button>
-                <span className="text-center text-xs italic text-muted">You can apply to this vacancy only once.</span>
-              </div>
-            </aside>
-          </div>
+          </Card>
         )}
       </div>
     </div>

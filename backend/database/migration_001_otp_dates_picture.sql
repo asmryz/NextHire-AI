@@ -1,11 +1,4 @@
--- =====================================================================
---  NexHire AI - Migration 001
---  Adds: registration OTP, vacancy start/end date, profile picture.
---
---  SAFE: kuch DROP ya DELETE nahi hota. Sirf naye columns / table banti hai.
---  Dobara chal jaye to bhi koi nuqsaan nahi (IF NOT EXISTS laga hai).
---  Neon > SQL Editor mein ek dafa chalao.
--- =====================================================================
+
 
 BEGIN;
 

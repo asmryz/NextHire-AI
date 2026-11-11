@@ -1,5 +1,4 @@
-// backend/utils/token.js
-// Owner: Aarian
+
 require('dotenv').config();
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');

@@ -1,7 +1,4 @@
-// frontend/src/pages/candidate/VacancyDetail.jsx
-// Owner: Shivani
-// SRS REQ-18: full description and requirements of one vacancy, and whether the candidate can
-// apply (not applied yet, still open, no other active application, profile 100% complete).
+
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import api, { getErrorMessage } from '../../services/api';

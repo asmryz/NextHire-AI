@@ -1,12 +1,4 @@
-// backend/controllers/application.controller.js
-// Owner: Shivani
-// SRS 4.3 Candidate Portal (apply side):
-//   REQ-19 position-specific structured form, no CV upload
-//   REQ-20 mandatory fields, one application per vacancy, one active application at a time (BR-12)
-//   REQ-21 optional portfolio / context link (not used for scoring)
-//   REQ-22 submission confirmation email
-//   REQ-23 list of submitted applications
-// Candidates never see AI scores or internal decisions (SRS 5.3).
+// Candidates never see AI scores or internal decisions
 const { pool } = require('../config/db');
 const { logAudit } = require('../utils/audit');
 const { sendApplicationConfirmation } = require('../utils/applicationEmails');
@@ -30,7 +22,7 @@ const isValidDate = (s) => {
   return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === s;
 };
 
-// Checks one answer against its field. Returns { value, error }.
+
 function checkAnswer(field, raw) {
   const value = raw === undefined || raw === null ? '' : String(raw).trim();
   if (!value) return { value: null, error: field.is_required ? 'This field is required' : null };
@@ -70,9 +62,7 @@ function checkAnswer(field, raw) {
       return { value, error: null };
   }
 }
-
-// Optional: tell the n8n AI Agent about the new application (final FYP-I).
-// Set N8N_APPLICATION_WEBHOOK_URL in backend/.env when the workflow is ready.
+//notify ai agent
 function notifyAiAgent(applicationId) {
   const url = process.env.N8N_APPLICATION_WEBHOOK_URL;
   if (!url) {
@@ -93,8 +83,6 @@ function notifyAiAgent(applicationId) {
 
 // ================================================================ APPLY
 
-// POST /api/candidate/vacancies/:id/apply
-// Body: { answers: { "<field_id>": "value", ... }, portfolio_link }
 async function applyToVacancy(req, res) {
   const vacancyId = toInt(req.params.id);
   if (!vacancyId) return res.status(404).json({ message: 'Vacancy not found.' });
@@ -155,7 +143,6 @@ async function applyToVacancy(req, res) {
       return res.status(409).json({ message: 'You already have an active application. You can apply for another vacancy once it is closed.' });
     }
 
-    // Validate every answer against the vacancy's own form
     const fieldsRes = await client.query(
       `SELECT field_id, field_key, label, field_type, is_required, options
          FROM form_field WHERE vacancy_id = $1 ORDER BY display_order, field_id`,
@@ -221,7 +208,6 @@ async function applyToVacancy(req, res) {
 
 // ================================================================ MY APPLICATIONS
 
-// GET /api/candidate/applications
 async function listMyApplications(req, res) {
   try {
     const { rows } = await pool.query(
@@ -246,7 +232,7 @@ async function listMyApplications(req, res) {
   }
 }
 
-// GET /api/candidate/applications/:id   (only the candidate's own application, BR-9)
+
 async function getMyApplication(req, res) {
   const id = toInt(req.params.id);
   if (!id) return res.status(404).json({ message: 'Application not found.' });

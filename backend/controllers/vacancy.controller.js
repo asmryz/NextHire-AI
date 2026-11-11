@@ -1,10 +1,4 @@
-// backend/controllers/vacancy.controller.js
-// Owner: Aarian
-// SRS 4.2 Job Vacancy Module (HR Admin only, BR-1):
-//   create / edit / delete / close / search vacancies, start + end date,
-//   requirements with mandatory flag + weightage (must total 100%, BR-11),
-//   Generic Form Mechanism: generate a position-specific form from the requirements,
-//   let HR adjust it, then publish.
+
 const { pool } = require('../config/db');
 const { logAudit } = require('../utils/audit');
 const { FIELD_TYPES, CHOICE_TYPES, CORE_KEYS, MIN_LEVELS, buildForm } = require('../utils/formTemplate');
@@ -73,7 +67,7 @@ async function fullVacancy(db, vacancyId) {
 }
 
 // Validates title/description/department/location/dates/requirements.
-// Returns { errors, data }.
+
 function validateVacancyBody(body = {}) {
   const errors = {};
   const title = String(body.title || '').trim();
@@ -122,7 +116,7 @@ function validateVacancyBody(body = {}) {
 }
 
 // Minimum must come from the dropdown (certifications have none). Checked only for NEW or CHANGED
-// requirements, so older vacancies saved with free-text minimums can still be edited.
+
 function minimumErrors(requirements) {
   const list = [];
   requirements.forEach((r, i) => {
@@ -162,9 +156,9 @@ async function insertFields(client, vacancyId, fields) {
 const sendErrors = (res, errors) =>
   res.status(400).json({ message: 'Please correct the highlighted fields.', errors });
 
-// ------------------------------------------------------------------ endpoints
 
-// GET /api/vacancies?search=&department_id=&status=&page=1&limit=10
+
+
 async function listVacancies(req, res) {
   const search = req.query.search ? String(req.query.search).trim() : null;
   const departmentId = toInt(req.query.department_id);
@@ -263,8 +257,7 @@ async function createVacancy(req, res) {
 
 // PUT /api/vacancies/:id
 // No applications yet: details, dates and requirements can all be edited (except CLOSED/FILLED).
-// Has applications (BR-21): the vacancy is LOCKED. Only the end date can change
-// (e.g. to extend the deadline); every other field in the request is ignored.
+
 async function updateVacancy(req, res) {
   const id = toInt(req.params.id);
   if (!id) return res.status(404).json({ message: 'Vacancy not found.' });
@@ -349,7 +342,7 @@ async function updateVacancy(req, res) {
   }
 }
 
-// POST /api/vacancies/:id/generate-form
+
 // Builds one field per requirement (replaces the current form).
 async function generateForm(req, res) {
   const id = toInt(req.params.id);
@@ -395,9 +388,6 @@ async function generateForm(req, res) {
   }
 }
 
-// PUT /api/vacancies/:id/form
-// Body: { fields: [{ requirement_id|null, field_key, is_standard, section, label, field_type,
-//                    is_required, options: [..] (RADIO/SELECT), help_text }] }  (array order = display order)
 // HR adjusts the generated form: edit labels/types, required flag, order, add own questions.
 async function saveForm(req, res) {
   const id = toInt(req.params.id);
@@ -483,7 +473,7 @@ async function saveForm(req, res) {
   }
 }
 
-// POST /api/vacancies/:id/publish   DRAFT -> OPEN (shows on candidate portal)
+
 async function publishVacancy(req, res) {
   const id = toInt(req.params.id);
   if (!id) return res.status(404).json({ message: 'Vacancy not found.' });
@@ -512,7 +502,7 @@ async function publishVacancy(req, res) {
   }
 }
 
-// POST /api/vacancies/:id/close   OPEN/DRAFT -> CLOSED (no new applications)
+// OPEN/DRAFT -> CLOSED (no new applications)
 async function closeVacancy(req, res) {
   const id = toInt(req.params.id);
   if (!id) return res.status(404).json({ message: 'Vacancy not found.' });
@@ -532,7 +522,7 @@ async function closeVacancy(req, res) {
   }
 }
 
-// DELETE /api/vacancies/:id   only when nobody has applied (otherwise: close it)
+
 async function deleteVacancy(req, res) {
   const id = toInt(req.params.id);
   if (!id) return res.status(404).json({ message: 'Vacancy not found.' });
