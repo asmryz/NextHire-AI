@@ -262,15 +262,12 @@ async function createVacancy(req, res) {
 }
 
 // PUT /api/vacancies/:id
-// Details + dates can always be edited (except CLOSED/FILLED).
-// Requirements can only change while the vacancy has NO applications
-// (existing answers are linked to the current form).
+// No applications yet: details, dates and requirements can all be edited (except CLOSED/FILLED).
+// Has applications (BR-21): the vacancy is LOCKED. Only the end date can change
+// (e.g. to extend the deadline); every other field in the request is ignored.
 async function updateVacancy(req, res) {
   const id = toInt(req.params.id);
   if (!id) return res.status(404).json({ message: 'Vacancy not found.' });
-
-  const { errors, data } = validateVacancyBody(req.body);
-  if (Object.keys(errors).length) return sendErrors(res, errors);
 
   const client = await pool.connect();
   try {
@@ -285,6 +282,31 @@ async function updateVacancy(req, res) {
       return res.status(409).json({ message: 'A closed vacancy cannot be edited.' });
     }
 
+    // ---- Locked vacancy: only the end date
+    if (current.applicants > 0) {
+      const endDate = req.body?.end_date ? String(req.body.end_date) : '';
+      let endError = null;
+      if (!DATE_RE.test(endDate)) endError = 'Please enter a valid date.';
+      else if (current.start_date && endDate < current.start_date) endError = 'End date must be on or after the start date.';
+      if (endError) {
+        await client.query('ROLLBACK');
+        return sendErrors(res, { end_date: endError });
+      }
+      if (endDate !== current.end_date) {
+        await client.query('UPDATE vacancy SET end_date = $1 WHERE vacancy_id = $2', [endDate, id]);
+        await logAudit(client, req.user.user_id, 'vacancy', id, 'UPDATE', `end date changed to ${endDate}`);
+      }
+      await client.query('COMMIT');
+      return res.json({ message: 'End date updated. The rest of this vacancy is locked.', vacancy: await fullVacancy(pool, id) });
+    }
+
+    // ---- No applications yet: everything can be edited
+    const { errors, data } = validateVacancyBody(req.body);
+    if (Object.keys(errors).length) {
+      await client.query('ROLLBACK');
+      return sendErrors(res, errors);
+    }
+
     const oldReqs = await loadRequirements(client, id);
     const requirementsChanged = !sameRequirements(oldReqs, data.requirements);
     let newStatus = current.status;
@@ -295,13 +317,6 @@ async function updateVacancy(req, res) {
       if (minErrors) {
         await client.query('ROLLBACK');
         return sendErrors(res, minErrors);
-      }
-      if (current.applicants > 0) {
-        await client.query('ROLLBACK');
-        return res.status(409).json({
-          message: 'This vacancy already has applications, so its requirements and form cannot be changed. You can still edit the details and dates.',
-          code: 'REQUIREMENTS_LOCKED',
-        });
       }
       // Old form was built from the old requirements -> remove it and rebuild later
       await client.query('DELETE FROM form_field WHERE vacancy_id = $1', [id]);
